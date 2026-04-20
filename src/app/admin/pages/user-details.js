@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { validateStudentId } from '@/lib/studentIdValidation';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const UserDetailsPage = ({ userId }) => {
   const router = useRouter();
@@ -34,6 +35,7 @@ const UserDetailsPage = ({ userId }) => {
 
   const [user, setUser] = useState(defaultUser);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Load user data from localStorage
   useEffect(() => {
@@ -295,34 +297,34 @@ const UserDetailsPage = ({ userId }) => {
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        // Try users first
-        let users = JSON.parse(localStorage.getItem('users') || '[]');
-        let userIndex = users.findIndex(u => u.id === user.id);
+    try {
+      setIsUpdating(true);
+      // Try users first
+      let users = JSON.parse(localStorage.getItem('users') || '[]');
+      let userIndex = users.findIndex(u => u.id === user.id);
+      
+      // If not found in users, try subAdmins
+      if (userIndex === -1) {
+        users = JSON.parse(localStorage.getItem('subAdmins') || '[]');
+        userIndex = users.findIndex(u => u.id === user.id);
         
-        // If not found in users, try subAdmins
-        if (userIndex === -1) {
-          users = JSON.parse(localStorage.getItem('subAdmins') || '[]');
-          userIndex = users.findIndex(u => u.id === user.id);
-          
-          if (userIndex !== -1) {
-            const filteredUsers = users.filter(u => u.id !== user.id);
-            localStorage.setItem('subAdmins', JSON.stringify(filteredUsers));
-            toast.success('Sub-admin deleted successfully!');
-            router.push('/admin/users');
-          }
-        } else {
+        if (userIndex !== -1) {
           const filteredUsers = users.filter(u => u.id !== user.id);
-          localStorage.setItem('users', JSON.stringify(filteredUsers));
-          toast.success('User deleted successfully!');
+          localStorage.setItem('subAdmins', JSON.stringify(filteredUsers));
+          setIsDeleteDialogOpen(false)
+          toast.success('Sub-admin deleted successfully!');
           router.push('/admin/users');
         }
-      } catch (error) {
-        toast.error('Failed to delete user');
-        setIsUpdating(false);
+      } else {
+        const filteredUsers = users.filter(u => u.id !== user.id);
+        localStorage.setItem('users', JSON.stringify(filteredUsers));
+        setIsDeleteDialogOpen(false)
+        toast.success('User deleted successfully!');
+        router.push('/admin/users');
       }
+    } catch (error) {
+      toast.error('Failed to delete user');
+      setIsUpdating(false);
     }
   };
 
@@ -368,7 +370,7 @@ const UserDetailsPage = ({ userId }) => {
             ) : (
               <>
                 <Button
-                  onClick={handleDelete}
+                  onClick={() => setIsDeleteDialogOpen(true)}
                   disabled={isUpdating}
                   variant="destructive"
                   className="bg-red-600 hover:bg-red-700 flex items-center gap-2 px-4 py-2"
@@ -506,6 +508,16 @@ const UserDetailsPage = ({ userId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title='Delete user?'
+        description='This action cannot be undone.'
+        confirmText='Delete user'
+        onConfirm={handleDelete}
+        isConfirming={isUpdating}
+      />
     </div>
   );
 };

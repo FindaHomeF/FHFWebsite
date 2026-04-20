@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const TwoFactorAuth = ({ isOpen, onClose, currentStatus = false }) => {
   const [step, setStep] = useState('setup') // 'setup', 'verify', 'complete'
   const [qrCode, setQrCode] = useState('data:image/png;base64,...') // Mock QR code
   const [secretKey, setSecretKey] = useState('JBSWY3DPEHPK3PXP') // Mock secret
   const [verificationCode, setVerificationCode] = useState('')
+  const [isDisableConfirmOpen, setIsDisableConfirmOpen] = useState(false)
   const [backupCodes] = useState([
     '1234-5678',
     '2345-6789',
@@ -40,14 +42,14 @@ const TwoFactorAuth = ({ isOpen, onClose, currentStatus = false }) => {
   }
 
   const handleDisable = () => {
-    if (window.confirm('Are you sure you want to disable 2FA? This reduces your account security.')) {
-      // In production, disable via backend
-      toast.success('2FA disabled')
-      onClose()
-    }
+    // In production, disable via backend
+    toast.success('2FA disabled')
+    setIsDisableConfirmOpen(false)
+    onClose()
   }
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -80,7 +82,7 @@ const TwoFactorAuth = ({ isOpen, onClose, currentStatus = false }) => {
                 </div>
                 <Button
                   variant="destructive"
-                  onClick={handleDisable}
+                  onClick={() => setIsDisableConfirmOpen(true)}
                   className="w-full"
                 >
                   Disable 2FA
@@ -202,6 +204,16 @@ const TwoFactorAuth = ({ isOpen, onClose, currentStatus = false }) => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <ConfirmActionDialog
+      open={isDisableConfirmOpen}
+      onOpenChange={setIsDisableConfirmOpen}
+      title='Disable 2FA?'
+      description='This reduces your account security.'
+      confirmText='Disable 2FA'
+      onConfirm={handleDisable}
+    />
+    </>
   )
 }
 

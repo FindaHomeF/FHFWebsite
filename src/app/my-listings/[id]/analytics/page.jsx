@@ -1,10 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Eye, TrendingUp, MessageCircle, Calendar, Download } from 'lucide-react'
 import Header from '@/app/components/global/Header'
 import Footer from '@/app/components/global/Footer'
+import { useItem, useItemViewStats } from '@/contexts/DataContext'
 import {
   LineChart,
   Line,
@@ -48,8 +49,26 @@ const mockAnalytics = {
 export default function ItemAnalyticsPage() {
   const params = useParams()
   const router = useRouter()
-  const { id } = params
-  const [analytics] = useState(mockAnalytics)
+  const id = params?.id
+  const { data: itemData } = useItem(id)
+  const { data: viewStats, isLoading: isViewStatsLoading } = useItemViewStats(id)
+
+  const analytics = useMemo(() => {
+    const safeTotalViews = Number(viewStats?.total_views ?? 0)
+    const safeViews24h = Number(viewStats?.views_24h ?? 0)
+    const safeUniqueViewers = Number(viewStats?.unique_viewers ?? 0)
+    const safeUniqueViewers24h = Number(viewStats?.unique_viewers_24h ?? 0)
+
+    return {
+      ...mockAnalytics,
+      overview: {
+        totalViews: safeTotalViews || mockAnalytics.overview.totalViews,
+        uniqueViewers: safeUniqueViewers || mockAnalytics.overview.totalViews,
+        views24h: safeViews24h || mockAnalytics.overview.avgViewsPerDay,
+        uniqueViewers24h: safeUniqueViewers24h || mockAnalytics.overview.totalInquiries,
+      },
+    }
+  }, [viewStats])
 
   return (
     <div className="bg-white w-full overflow-x-hidden scroll-smooth transition-all ease-linear duration-500">
@@ -67,7 +86,7 @@ export default function ItemAnalyticsPage() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Item Analytics</h1>
-              <p className="text-gray-600">Wooden Study Desk</p>
+              <p className="text-gray-600">{itemData?.title || 'Listing'}</p>
             </div>
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
@@ -82,35 +101,43 @@ export default function ItemAnalyticsPage() {
                 <span className="text-sm text-gray-600">Total Views</span>
                 <Eye className="w-5 h-5 text-blue-500" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{analytics.overview.totalViews}</p>
-              <p className="text-sm text-gray-500 mt-1">+12% from last week</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {isViewStatsLoading ? '...' : analytics.overview.totalViews}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">From listing view stats</p>
             </div>
 
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">Total Inquiries</span>
+                <span className="text-sm text-gray-600">Unique Viewers</span>
                 <MessageCircle className="w-5 h-5 text-green-500" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{analytics.overview.totalInquiries}</p>
-              <p className="text-sm text-gray-500 mt-1">+8% from last week</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {isViewStatsLoading ? '...' : analytics.overview.uniqueViewers}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">From listing view stats</p>
             </div>
 
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">Conversion Rate</span>
+                <span className="text-sm text-gray-600">Views (24h)</span>
                 <TrendingUp className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{analytics.overview.conversionRate}%</p>
-              <p className="text-sm text-gray-500 mt-1">Above average (3.5%)</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {isViewStatsLoading ? '...' : analytics.overview.views24h}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">Last 24 hours</p>
             </div>
 
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">Avg Views/Day</span>
+                <span className="text-sm text-gray-600">Unique (24h)</span>
                 <Calendar className="w-5 h-5 text-purple-500" />
               </div>
-              <p className="text-3xl font-bold text-gray-900">{analytics.overview.avgViewsPerDay}</p>
-              <p className="text-sm text-gray-500 mt-1">Last 7 days</p>
+              <p className="text-3xl font-bold text-gray-900">
+                {isViewStatsLoading ? '...' : analytics.overview.uniqueViewers24h}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">Last 24 hours</p>
             </div>
           </div>
 

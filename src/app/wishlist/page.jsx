@@ -12,12 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const WishlistPage = () => {
   const router = useRouter()
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlist()
   const { addToCart } = useCart()
   const [activeTab, setActiveTab] = useState('all')
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
 
   const properties = wishlist.filter(item => item.type === 'apartment' || item.type === 'property')
   const items = wishlist.filter(item => item.type === 'item' || item.type === 'decluttered')
@@ -29,10 +31,9 @@ const WishlistPage = () => {
   }
 
   const handleClearAll = () => {
-    if (window.confirm('Clear all items from wishlist?')) {
-      clearWishlist()
-      toast.success('Wishlist cleared')
-    }
+    clearWishlist()
+    setIsClearDialogOpen(false)
+    toast.success('Wishlist cleared')
   }
 
 
@@ -68,7 +69,7 @@ const WishlistPage = () => {
               </div>
             </div>
             {wishlist.length > 0 && (
-              <Button variant="outline" onClick={handleClearAll} className="text-red-600 border-red-200 hover:bg-red-50">
+              <Button variant="outline" onClick={() => setIsClearDialogOpen(true)} className="text-red-600 border-red-200 hover:bg-red-50">
                 Clear All
               </Button>
             )}
@@ -123,6 +124,15 @@ const WishlistPage = () => {
             </TabsContent>
           </Tabs>
         )}
+
+        <ConfirmActionDialog
+          open={isClearDialogOpen}
+          onOpenChange={setIsClearDialogOpen}
+          title='Clear wishlist?'
+          description='This will remove all saved items from your wishlist.'
+          confirmText='Clear wishlist'
+          onConfirm={handleClearAll}
+        />
       </main>
       <Footer />
     </div>

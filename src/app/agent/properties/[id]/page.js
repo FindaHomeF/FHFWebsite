@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 export default function AgentPropertyDetailsPage() {
   const router = useRouter()
@@ -13,6 +14,7 @@ export default function AgentPropertyDetailsPage() {
   const propertyId = params?.id
   const [property, setProperty] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && propertyId) {
@@ -24,12 +26,11 @@ export default function AgentPropertyDetailsPage() {
   }, [propertyId])
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this property?')) {
-      const properties = JSON.parse(localStorage.getItem('properties') || '[]')
-      const filtered = properties.filter(p => p.id !== propertyId)
-      localStorage.setItem('properties', JSON.stringify(filtered))
-      router.push('/agent/properties')
-    }
+    const properties = JSON.parse(localStorage.getItem('properties') || '[]')
+    const filtered = properties.filter(p => p.id !== propertyId)
+    localStorage.setItem('properties', JSON.stringify(filtered))
+    setIsDeleteDialogOpen(false)
+    router.push('/agent/properties')
   }
 
   if (isLoading) {
@@ -75,7 +76,7 @@ export default function AgentPropertyDetailsPage() {
             Edit
           </Button>
         </Link>
-        <Button variant="outline" onClick={handleDelete} className="text-red-600 hover:text-red-700">
+        <Button variant="outline" onClick={() => setIsDeleteDialogOpen(true)} className="text-red-600 hover:text-red-700">
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
         </Button>
@@ -171,6 +172,15 @@ export default function AgentPropertyDetailsPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete property?"
+        description="This permanently removes the property from your listings."
+        confirmText="Delete property"
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

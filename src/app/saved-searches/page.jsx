@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const SavedSearchesPage = () => {
   const [searches, setSearches] = useState([])
@@ -18,6 +19,8 @@ const SavedSearchesPage = () => {
   const [searchName, setSearchName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [alertsEnabled, setAlertsEnabled] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [pendingDeleteSearchId, setPendingDeleteSearchId] = useState(null)
 
   useEffect(() => {
     // Load from localStorage or API
@@ -72,12 +75,17 @@ const SavedSearchesPage = () => {
     setEditingSearch(null)
   }
 
-  const handleDelete = (id) => {
-    if (window.confirm('Delete this saved search?')) {
-      const updated = searches.filter(s => s.id !== id)
-      saveSearches(updated)
-      toast.success('Search deleted')
-    }
+  const requestDelete = (id) => {
+    setPendingDeleteSearchId(id)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    const updated = searches.filter(s => s.id !== pendingDeleteSearchId)
+    saveSearches(updated)
+    setIsDeleteDialogOpen(false)
+    setPendingDeleteSearchId(null)
+    toast.success('Search deleted')
   }
 
   if (searches.length === 0) {
@@ -152,7 +160,7 @@ const SavedSearchesPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(search.id)}
+                    onClick={() => requestDelete(search.id)}
                     className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -211,6 +219,15 @@ const SavedSearchesPage = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <ConfirmActionDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title='Delete saved search?'
+          description='You will stop receiving alerts for this saved search.'
+          confirmText='Delete search'
+          onConfirm={handleConfirmDelete}
+        />
       </main>
       <Footer />
     </div>

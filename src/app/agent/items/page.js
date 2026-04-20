@@ -10,6 +10,17 @@ import AdminTableWithBulk from '../../admin/components/AdminTableWithBulk'
 import { toast } from 'sonner'
 import { useAgent } from '../context/AgentContext'
 import Link from 'next/link'
+import { useDeleteDeclutteringListing, useRestoreDeclutteringListing, useSoftDeleteDeclutteringListing } from '@/lib/mutations'
+import { useMyItems } from '@/contexts/DataContext'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
+
+const toNumericListingId = (id) => {
+  if (id === null || id === undefined) return null
+  const normalized = String(id).trim().replace(/^#D/i, '')
+  if (!/^\d+$/.test(normalized)) return null
+  const parsed = Number(normalized)
+  return Number.isInteger(parsed) ? parsed : null
+}
 
 export default function AgentItemsPage() {
   const router = useRouter()
@@ -17,21 +28,50 @@ export default function AgentItemsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [viewMode, setViewMode] = useState('active')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
-  const [items, setItems] = useState([])
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
+  const [pendingDeleteIds, setPendingDeleteIds] = useState([])
+  const [pendingDeleteMode, setPendingDeleteMode] = useState('soft')
+  const { data: queriedItems = [], isLoading: isItemsLoading } = useMyItems()
+  const { mutateAsync: softDeleteDeclutteringListing, isPending: isArchivingListings } = useSoftDeleteDeclutteringListing()
+  const { mutateAsync: restoreDeclutteringListing, isPending: isRestoringListings } = useRestoreDeclutteringListing()
+  const { mutateAsync: deleteDeclutteringListing, isPending: isDeletingListings } = useDeleteDeclutteringListing()
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const allItems = JSON.parse(localStorage.getItem('items') || '[]')
-      // Filter by agent ID
-      const agentItems = allItems.filter(i => i.agentId === 'agent-1' || !i.agentId)
-      setItems(agentItems)
+  const currentUser = useMemo(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      return JSON.parse(localStorage.getItem('currentUser') || 'null')
+    } catch {
+      return null
     }
   }, [])
 
+  const ownedItems = useMemo(() => {
+    const userId = String(currentUser?.id ?? currentUser?.user_id ?? currentUser?.pk ?? '')
+    const userEmail = String(currentUser?.email || '').toLowerCase()
+
+    return queriedItems.filter((item) => {
+      const ownerId = String(item.ownerId ?? item.owner ?? item.owner_id ?? item.userId ?? item.user_id ?? '')
+      const ownerEmail = String(item.ownerEmail ?? item.owner_email ?? '').toLowerCase()
+      const legacyAgentOwner = String(item.agentId || '')
+
+      if (userId && ownerId) return ownerId === userId
+      if (userEmail && ownerEmail) return ownerEmail === userEmail
+      if (legacyAgentOwner) return legacyAgentOwner === 'agent-1' || legacyAgentOwner === userId
+
+      // Fallback behavior for demo/mock items that do not yet carry owner metadata.
+      return !ownerId && !ownerEmail && !legacyAgentOwner
+    })
+  }, [queriedItems, currentUser])
+
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
+    const scopedItems = ownedItems.filter((item) => {
+      const isDeleted = Boolean(item.isDeleted ?? item.is_deleted)
+      return viewMode === 'archived' ? isDeleted : !isDeleted
+    })
+    const visibleItems = scopedItems.filter(item => {
       const matchesSearch = (item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (item.category || '').toLowerCase().includes(searchTerm.toLowerCase())
       const matchesStatus = statusFilter === 'all' || item.status === statusFilter
@@ -39,7 +79,14 @@ export default function AgentItemsPage() {
       
       return matchesSearch && matchesStatus && matchesCategory
     })
-  }, [items, searchTerm, statusFilter, categoryFilter])
+    if (viewMode === 'archived') {
+      return visibleItems.map((item) => ({
+        ...item,
+        status: 'Archived',
+      }))
+    }
+    return visibleItems
+  }, [ownedItems, searchTerm, statusFilter, categoryFilter, viewMode])
 
   const paginationData = useMemo(() => {
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
@@ -56,6 +103,12 @@ export default function AgentItemsPage() {
     }
   }, [filteredItems, currentPage, itemsPerPage])
 
+  useEffect(() => {
+    if (currentPage > paginationData.totalPages && paginationData.totalPages > 0) {
+      setCurrentPage(paginationData.totalPages)
+    }
+  }, [currentPage, paginationData.totalPages])
+
   const columns = useMemo(() => [
     { key: 'id', label: 'ID', width: 'w-20' },
     { key: 'title', label: 'Title', width: 'w-32', truncate: true },
@@ -69,7 +122,8 @@ export default function AgentItemsPage() {
   const statusBadgeStyles = useMemo(() => ({
     'Active': 'bg-[#4EC50E] text-white',
     'Pending': 'bg-[#C5B60E] text-white',
-    'Inactive': 'bg-[#E01A1A] text-white'
+    'Inactive': 'bg-[#E01A1A] text-white',
+    Archived: 'bg-gray-500 text-white',
   }), [])
 
   const getStatusBadge = useCallback((status) => {
@@ -120,42 +174,25 @@ export default function AgentItemsPage() {
     return pages
   }, [paginationData.totalPages, currentPage])
 
-  const handleBulkAction = useCallback((action, selectedIds) => {
+  const handleBulkAction = useCallback(async (action, selectedIds) => {
     try {
-      const allItems = JSON.parse(localStorage.getItem('items') || '[]')
+      const selectedNumericIds = selectedIds
+        .map((selectedId) => toNumericListingId(selectedId))
+        .filter((id) => id !== null)
       
       switch (action) {
         case 'delete':
-          const remaining = allItems.filter(i => !selectedIds.includes(i.id))
-          localStorage.setItem('items', JSON.stringify(remaining))
-          setItems(remaining.filter(i => i.agentId === 'agent-1' || !i.agentId))
-          toast.success(`${selectedIds.length} item(s) deleted successfully`)
+          setPendingDeleteIds(selectedIds)
+          setPendingDeleteMode(viewMode === 'archived' ? 'hard' : 'soft')
+          setIsBulkDeleteDialogOpen(true)
           break
-          
-        case 'activate':
-          allItems.forEach(i => {
-            if (selectedIds.includes(i.id)) {
-              i.status = 'Active'
-            }
-          })
-          localStorage.setItem('items', JSON.stringify(allItems))
-          setItems(allItems.filter(i => i.agentId === 'agent-1' || !i.agentId))
-          toast.success(`${selectedIds.length} item(s) activated`)
-          break
-          
-        case 'deactivate':
-          allItems.forEach(i => {
-            if (selectedIds.includes(i.id)) {
-              i.status = 'Inactive'
-            }
-          })
-          localStorage.setItem('items', JSON.stringify(allItems))
-          setItems(allItems.filter(i => i.agentId === 'agent-1' || !i.agentId))
-          toast.success(`${selectedIds.length} item(s) deactivated`)
+
+        case 'restore':
+          await Promise.all(selectedNumericIds.map((id) => restoreDeclutteringListing({ id })))
           break
           
         case 'export':
-          const selectedItems = allItems.filter(i => selectedIds.includes(i.id))
+          const selectedItems = filteredItems.filter((i) => selectedIds.includes(i.id || i.itemId))
           const csvContent = [
             ['ID', 'Title', 'Category', 'Price', 'Condition', 'Status', 'Inventory'].join(','),
             ...selectedItems.map(i => [
@@ -186,7 +223,27 @@ export default function AgentItemsPage() {
       console.error('Bulk action error:', error)
       toast.error('Failed to perform bulk action')
     }
-  }, [])
+  }, [restoreDeclutteringListing, viewMode, filteredItems])
+
+  const handleConfirmBulkDelete = async () => {
+    try {
+      const selectedNumericIds = pendingDeleteIds
+        .map((selectedId) => toNumericListingId(selectedId))
+        .filter((id) => id !== null)
+
+      if (pendingDeleteMode === 'hard') {
+        await Promise.all(selectedNumericIds.map((id) => deleteDeclutteringListing({ id })))
+      } else {
+        await Promise.all(selectedNumericIds.map((id) => softDeleteDeclutteringListing({ id })))
+      }
+
+      setIsBulkDeleteDialogOpen(false)
+      setPendingDeleteIds([])
+      setPendingDeleteMode('soft')
+    } catch {
+      // Error handled by mutation toast.
+    }
+  }
 
   if (!canManageItems) {
     return (
@@ -246,6 +303,32 @@ export default function AgentItemsPage() {
 
       <div className="bg-white rounded-lg">
         <div className="flex gap-2 justify-end items-center">
+          <div className="mr-2 flex items-center rounded-md border border-black10 bg-white p-1">
+            <Button
+              variant={viewMode === 'active' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setViewMode('active')
+                setStatusFilter('all')
+                setCurrentPage(1)
+              }}
+            >
+              Active
+            </Button>
+            <Button
+              variant={viewMode === 'archived' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setViewMode('archived')
+                setStatusFilter('all')
+                setCurrentPage(1)
+              }}
+            >
+              Archived
+            </Button>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
             <Input
@@ -287,29 +370,65 @@ export default function AgentItemsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm">
-        <AdminTableWithBulk
-          columns={columns}
-          data={paginationData.currentItems}
-          currentPage={currentPage}
-          handlePageChange={setCurrentPage}
-          handlePrevious={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-          handleNext={() => currentPage < paginationData.totalPages && setCurrentPage(currentPage + 1)}
-          paginationData={{
-            currentItems: paginationData.currentItems,
-            startIndex: paginationData.startIndex,
-            endIndex: paginationData.endIndex,
-            totalItems: paginationData.totalItems,
-            totalPages: paginationData.totalPages
-          }}
-          pageNumbers={pageNumbers}
-          statusBadgeStyles={statusBadgeStyles}
-          getStatusBadge={getStatusBadge}
-          onRowClick={handleRowClick}
-          bulkActions={['activate', 'deactivate', 'delete', 'export']}
-          onBulkAction={handleBulkAction}
-        />
-      </div>
+      <p className="text-xs text-gray-500">
+        Archived items can be restored within 90 days from deletion.
+      </p>
+
+      {isItemsLoading ? (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <Lock className="w-12 h-12 text-gray-300 mx-auto mb-4 animate-pulse" />
+          <p className="text-gray-600">Loading your listings...</p>
+        </div>
+      ) : paginationData.totalItems === 0 ? (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <p className="text-gray-700 font-medium">
+            {viewMode === 'archived' ? 'No archived items found.' : 'No active items found.'}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            {viewMode === 'archived'
+              ? 'Archived items will appear here and can be restored within 90 days.'
+              : 'Use Add Item to create your first listing.'}
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow-sm">
+          <AdminTableWithBulk
+            columns={columns}
+            data={paginationData.currentItems}
+            currentPage={currentPage}
+            handlePageChange={setCurrentPage}
+            handlePrevious={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+            handleNext={() => currentPage < paginationData.totalPages && setCurrentPage(currentPage + 1)}
+            paginationData={{
+              currentItems: paginationData.currentItems,
+              startIndex: paginationData.startIndex,
+              endIndex: paginationData.endIndex,
+              totalItems: paginationData.totalItems,
+              totalPages: paginationData.totalPages
+            }}
+            pageNumbers={pageNumbers}
+            statusBadgeStyles={statusBadgeStyles}
+            getStatusBadge={getStatusBadge}
+            onRowClick={handleRowClick}
+            bulkActions={viewMode === 'archived' ? ['restore', 'delete', 'export'] : ['delete', 'export']}
+            onBulkAction={handleBulkAction}
+          />
+        </div>
+      )}
+
+      <ConfirmActionDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        title={pendingDeleteMode === 'hard' ? 'Delete selected items permanently?' : 'Archive selected items?'}
+        description={
+          pendingDeleteMode === 'hard'
+            ? `This permanently removes ${pendingDeleteIds.length} selected listing(s). This action cannot be undone.`
+            : `This moves ${pendingDeleteIds.length} selected listing(s) to Archived. You can restore them within 90 days.`
+        }
+        confirmText={pendingDeleteMode === 'hard' ? 'Delete selected' : 'Archive selected'}
+        onConfirm={handleConfirmBulkDelete}
+        isConfirming={isDeletingListings || isArchivingListings || isRestoringListings}
+      />
     </div>
   )
 }

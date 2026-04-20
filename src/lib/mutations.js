@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { saveToStorage } from './query-options'
 import { toast } from 'sonner'
-import { clearAuthStorage, loginUser, logoutUser, persistAuthSession, registerUser, requestPasswordReset, resendEmailOtp, verifyEmailOtp } from './auth-api'
+import { changePassword, clearAuthStorage, createDeclutteringListing, deleteDeclutteringListing, loginUser, logoutUser, partiallyUpdateDeclutteringListing, persistAuthSession, persistRefreshedAuthTokens, refreshAuthToken, registerUser, reorderDeclutteringListingImages, requestPasswordReset, resendEmailOtp, resetPasswordWithOtp, restoreDeclutteringListing, softDeleteDeclutteringListing, updateCurrentUserProfile, updateDeclutteringListing, uploadStudentIdDocument, verifyEmailOtp } from './auth-api'
 
 // Auth mutations
 export const useRegisterUser = () => {
@@ -88,6 +88,232 @@ export const useRequestPasswordReset = () => {
     onError: (error) => {
       toast.error(error?.message || 'Unable to process reset request right now')
       console.error('Error requesting password reset:', error)
+    },
+  })
+}
+
+export const useResetPasswordWithOtp = () => {
+  return useMutation({
+    mutationFn: resetPasswordWithOtp,
+    onSuccess: () => {
+      clearAuthStorage()
+      toast.success('Password reset successful. Please log in with your new password.')
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Unable to reset password')
+      console.error('Error resetting password:', error)
+    },
+  })
+}
+
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      toast.success('Password changed successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Unable to change password')
+      console.error('Error changing password:', error)
+    },
+  })
+}
+
+export const useUpdateCurrentUserProfile = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ payload, accessToken }) =>
+      updateCurrentUserProfile(payload, accessToken),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] })
+      if (data?.user && typeof window !== 'undefined') {
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
+      }
+      toast.success('Profile updated successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Unable to update profile')
+      console.error('Error updating profile:', error)
+    },
+  })
+}
+
+export const useUploadStudentIdDocument = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ studentIdDocument, accessToken }) =>
+      uploadStudentIdDocument({ studentIdDocument }, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] })
+      queryClient.invalidateQueries({ queryKey: ['auth', 'student-id-status'] })
+      toast.success('Student ID uploaded successfully. Awaiting admin review.')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Unable to upload Student ID document')
+      console.error('Error uploading Student ID document:', error)
+    },
+  })
+}
+
+export const useRefreshAuthToken = () => {
+  return useMutation({
+    mutationFn: ({ refreshToken }) => refreshAuthToken(refreshToken),
+    onSuccess: (data) => {
+      persistRefreshedAuthTokens(data)
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      console.error('Error refreshing auth token:', error)
+    },
+  })
+}
+
+export const useCreateDeclutteringListing = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ payload, accessToken }) =>
+      createDeclutteringListing(payload, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+      toast.success('Decluttering listing created successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Failed to create decluttering listing')
+      console.error('Error creating decluttering listing:', error)
+    },
+  })
+}
+
+export const useUpdateDeclutteringListing = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, payload, accessToken }) =>
+      updateDeclutteringListing(id, payload, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+      toast.success('Decluttering listing updated successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Failed to update decluttering listing')
+      console.error('Error updating decluttering listing:', error)
+    },
+  })
+}
+
+export const usePartialUpdateDeclutteringListing = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, payload, accessToken }) =>
+      partiallyUpdateDeclutteringListing(id, payload, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+      toast.success('Decluttering listing updated successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Failed to update decluttering listing')
+      console.error('Error partially updating decluttering listing:', error)
+    },
+  })
+}
+
+export const useDeleteDeclutteringListing = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, accessToken }) => deleteDeclutteringListing(id, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+      toast.success('Decluttering listing deleted successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Failed to delete decluttering listing')
+      console.error('Error deleting decluttering listing:', error)
+    },
+  })
+}
+
+export const useReorderDeclutteringListingImages = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, imageOrder, accessToken }) =>
+      reorderDeclutteringListingImages(id, imageOrder, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+      toast.success('Listing images reordered successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Failed to reorder listing images')
+      console.error('Error reordering listing images:', error)
+    },
+  })
+}
+
+export const useSoftDeleteDeclutteringListing = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, accessToken }) => softDeleteDeclutteringListing(id, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+      toast.success('Listing archived successfully. You can restore it within 90 days.')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Failed to archive listing')
+      console.error('Error archiving listing:', error)
+    },
+  })
+}
+
+export const useRestoreDeclutteringListing = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, accessToken }) => restoreDeclutteringListing(id, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+      toast.success('Listing restored successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Failed to restore listing')
+      console.error('Error restoring listing:', error)
     },
   })
 }

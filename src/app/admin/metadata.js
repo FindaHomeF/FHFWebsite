@@ -1,6 +1,4 @@
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Admin Dashboard | Find-a-Home FUTA',
   description: 'Comprehensive admin dashboard for managing the Find-a-Home FUTA platform - users, properties, services, and analytics.',
   keywords: ['admin', 'dashboard', 'FUTA', 'property management', 'user management'],

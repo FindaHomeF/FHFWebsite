@@ -1,63 +1,155 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import ImageUpload from './components/ImageUpload'
 import { toast } from 'sonner'
+import { usePartialUpdateDeclutteringListing } from '@/lib/mutations'
+import {
+  createDeclutteringListingImage,
+  deleteDeclutteringListingImage,
+  getDeclutteringListingById,
+  getDeclutteringListingImages,
+  setDeclutteringListingImageFeatured,
+  updateDeclutteringListingImage,
+} from '@/lib/auth-api'
 
-// Helper function to convert file to base64
-const fileToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = (e) => {
-      const img = new Image()
-      img.src = e.target.result
-      img.onload = () => {
-        // Create canvas with max dimensions (800x600 to reduce size)
-        const MAX_WIDTH = 800
-        const MAX_HEIGHT = 600
-        let width = img.width
-        let height = img.height
-        
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height = (height * MAX_WIDTH) / width
-            width = MAX_WIDTH
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width = (width * MAX_HEIGHT) / height
-            height = MAX_HEIGHT
-          }
-        }
-        
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, width, height)
-        
-        // Convert to base64 with quality 0.7 (70% quality to reduce size)
-        const compressed = canvas.toDataURL('image/jpeg', 0.7)
-        resolve(compressed)
-      }
-      img.onerror = (error) => reject(error)
-    }
-    reader.onerror = (error) => reject(error)
+const DECLUTTER_FORM_CONDITION_MAP = {
+  Excellent: 'LIKE_NEW',
+  Good: 'GOOD',
+  Fair: 'FAIR',
+  Poor: 'POOR',
+}
+
+const DECLUTTER_STATUS_MAP = {
+  Pending: 'PENDING_APPROVAL',
+  Available: 'ACTIVE',
+  Sold: 'SOLD',
+  Draft: 'DRAFT',
+  ACTIVE: 'ACTIVE',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  SOLD: 'SOLD',
+  DRAFT: 'DRAFT',
+  EXPIRED: 'EXPIRED',
+}
+
+const BACKEND_CONDITION_TO_FORM_MAP = {
+  NEW: 'Excellent',
+  LIKE_NEW: 'Excellent',
+  GOOD: 'Good',
+  FAIR: 'Fair',
+  POOR: 'Poor',
+  'N/A': 'Poor',
+}
+
+const toNumericItemId = (id) => {
+  if (id === null || id === undefined) return null
+  const normalized = String(id).trim().replace(/^#D/i, '')
+  if (!/^\d+$/.test(normalized)) return null
+  const parsed = Number(normalized)
+  return Number.isInteger(parsed) ? parsed : null
+}
+
+const extractImageValues = (images = []) => {
+  if (!Array.isArray(images)) return []
+  return images
+    .map((entry) => {
+      if (typeof entry === 'string') return entry
+      if (!entry || typeof entry !== 'object') return null
+      return entry.image || entry.url || entry.src || null
+    })
+    .filter(Boolean)
+}
+
+const normalizeImageRecord = (entry, index) => {
+  if (!entry || typeof entry !== 'object') return null
+  const imageUrl = entry.image || entry.url || entry.src || null
+  if (!imageUrl) return null
+  return {
+    id: entry.id ?? null,
+    image: imageUrl,
+    caption: entry.caption || `Image ${index + 1}`,
+    display_order:
+      entry.display_order !== undefined && entry.display_order !== null
+        ? Number(entry.display_order)
+        : index,
+    is_featured: Boolean(entry.is_featured ?? index === 0),
+  }
+}
+
+const normalizeListingImageRecords = (images = []) => {
+  if (!Array.isArray(images)) return []
+  const records = images
+    .map(normalizeImageRecord)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const orderA = Number.isFinite(a.display_order) ? a.display_order : Number.MAX_SAFE_INTEGER
+      const orderB = Number.isFinite(b.display_order) ? b.display_order : Number.MAX_SAFE_INTEGER
+      return orderA - orderB
+    })
+  const featuredIndex = records.findIndex((record) => record.is_featured)
+  if (featuredIndex > 0) {
+    const [featured] = records.splice(featuredIndex, 1)
+    records.unshift(featured)
+  }
+  return records
+}
+
+const formatPriceInputValue = (listing = {}) => {
+  if (listing.price_display) {
+    const parsedFromDisplay = String(listing.price_display).replace(/[^\d.]/g, '')
+    if (parsedFromDisplay) return parsedFromDisplay
+  }
+  const numericPrice = Number(listing.price)
+  if (!Number.isFinite(numericPrice)) return ''
+  return String(Math.max(Math.round(numericPrice / 100), 0))
+}
+
+const normalizeBackendListingForEdit = (listing, itemId) => {
+  const normalizedImageRecords = normalizeListingImageRecords(listing?.images || [])
+  return {
+    id: String(listing?.id || itemId),
+    title: listing?.title || '',
+    price: formatPriceInputValue(listing),
+    category: listing?.property_type || '',
+    condition: BACKEND_CONDITION_TO_FORM_MAP[listing?.condition] || 'Good',
+    location: listing?.location || '',
+    sellerName: listing?.contact_info || '',
+    description: listing?.description || '',
+    inventory: Number(listing?.inventory || 1),
+    images: normalizedImageRecords.map((record) => record.image),
+    imageRecords: normalizedImageRecords,
+    status: listing?.status || 'DRAFT',
+    isNegotiable: Boolean(listing?.features?.is_negotiable),
+    isPremium: Boolean(listing?.features?.is_featured),
+  }
+}
+
+const findLocalItemById = (items, itemId) => {
+  const numericItemId = toNumericItemId(itemId)
+  return items.find((item) => {
+    const currentId = item?.id || item?.itemId
+    return (
+      String(currentId) === String(itemId) ||
+      (numericItemId !== null && toNumericItemId(currentId) === numericItemId)
+    )
   })
 }
 
 const EditItemPage = () => {
   const router = useRouter()
+  const pathname = usePathname()
   const params = useParams()
   const itemId = params?.id ? decodeURIComponent(params.id) : null
   const [isLoading, setIsLoading] = useState(true)
   const [existingItem, setExistingItem] = useState(null)
+  const [hasTouchedFeaturedImage, setHasTouchedFeaturedImage] = useState(false)
+  const [hasTouchedOtherImages, setHasTouchedOtherImages] = useState(false)
+  const partialUpdateDeclutteringListingMutation = usePartialUpdateDeclutteringListing()
 
   const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm({
     defaultValues: {
@@ -76,89 +168,159 @@ const EditItemPage = () => {
 
   // Load item data from localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && itemId) {
-      const items = JSON.parse(localStorage.getItem('items') || '[]')
-      const item = items.find(p => p.id === itemId)
-      
-      if (item) {
-        setExistingItem(item)
-        
-        // Extract numeric value from price string (e.g., "₦15,000" -> "15000")
-        const priceValue = item.price.replace(/[₦\s,]/g, '')
-        
-        reset({
-          title: item.title,
-          price: priceValue,
-          description: item.description,
-          category: item.category,
-          condition: item.condition,
-          location: item.location,
-          sellerName: item.sellerName || '',
-          inventory: item.inventory || 1,
-          featuredImage: null,
-          otherImages: []
-        })
-        
-        // Set category and condition in the Select components
-        setValue('category', item.category)
-        setValue('condition', item.condition)
-      } else {
-        console.error('Item not found with ID:', itemId)
+    const loadListing = async () => {
+      if (typeof window === 'undefined' || !itemId) return
+      setIsLoading(true)
+
+      let resolvedItem = null
+
+      try {
+        const backendListing = await getDeclutteringListingById(itemId)
+        const backendImages = await getDeclutteringListingImages(itemId).catch(() => [])
+        const normalizedImageRecords = normalizeListingImageRecords(backendImages)
+        resolvedItem = normalizeBackendListingForEdit(
+          {
+            ...backendListing,
+            images: normalizedImageRecords.length > 0 ? normalizedImageRecords : backendListing?.images,
+          },
+          itemId
+        )
+      } catch {
+        const items = JSON.parse(localStorage.getItem('items') || '[]')
+        const localItem = findLocalItemById(items, itemId)
+        if (localItem) {
+          const imageRecords = normalizeListingImageRecords(localItem?.images || [])
+          resolvedItem = {
+            ...localItem,
+            price: String(localItem?.price || '').replace(/[₦\s,]/g, ''),
+            imageRecords,
+            images: imageRecords.length > 0 ? imageRecords.map((record) => record.image) : localItem?.images || [],
+          }
+        }
       }
+
+      if (resolvedItem) {
+        setExistingItem(resolvedItem)
+        reset({
+          title: resolvedItem.title || '',
+          price: resolvedItem.price || '',
+          description: resolvedItem.description || '',
+          category: resolvedItem.category || '',
+          condition: resolvedItem.condition || 'Good',
+          location: resolvedItem.location || '',
+          sellerName: resolvedItem.sellerName || '',
+          inventory: resolvedItem.inventory || 1,
+          featuredImage: null,
+          otherImages: [],
+        })
+        setValue('category', resolvedItem.category || '')
+        setValue('condition', resolvedItem.condition || 'Good')
+        setHasTouchedFeaturedImage(false)
+        setHasTouchedOtherImages(false)
+      } else {
+        toast.error('Unable to load listing for editing')
+      }
+
       setIsLoading(false)
     }
-  }, [itemId])
+
+    loadListing()
+  }, [itemId, reset, setValue])
 
   const onSubmit = async (data) => {
     console.log('Updated form data:', data)
-    
+    let loadingToastId
     try {
-      toast.loading('Updating item...')
+      loadingToastId = toast.loading('Updating item...')
       
-      // Get existing items from localStorage
       const existingItems = JSON.parse(localStorage.getItem('items') || '[]')
+      const itemIndex = existingItems.findIndex((item) => {
+        const currentId = item?.id || item?.itemId
+        return (
+          String(currentId) === String(itemId) ||
+          (toNumericItemId(currentId) !== null && toNumericItemId(currentId) === toNumericItemId(itemId))
+        )
+      })
       
-      // Find and update the item
-      const itemIndex = existingItems.findIndex(p => p.id === itemId)
-      
-      if (itemIndex !== -1) {
-        // Start with existing images
-        const updatedImages = [...existingItem.images]
-        
-        // Handle featured image update
-        if (data.featuredImage instanceof File) {
-          const base64 = await fileToBase64(data.featuredImage)
-          updatedImages[0] = base64
-        }
-        
-        // Handle other images updates
-        if (data.otherImages && data.otherImages.length > 0) {
-          for (let i = 0; i < data.otherImages.length && i + 1 < 5; i++) {
-            const file = data.otherImages[i]
-            if (file instanceof File) {
-              const base64 = await fileToBase64(file)
-              if (updatedImages[i + 1]) {
-                updatedImages[i + 1] = base64
-              } else {
-                updatedImages.push(base64)
-              }
-            } else if (typeof file === 'string' && !file.startsWith('data:') && !file.startsWith('blob:')) {
-              if (updatedImages[i + 1]) {
-                updatedImages[i + 1] = file
-              } else {
-                updatedImages.push(file)
-              }
+      {
+        const featuredInput = data.featuredImage
+        const otherImagesInput = Array.isArray(data.otherImages) ? data.otherImages : []
+        const imageRecords = Array.isArray(existingItem?.imageRecords) ? existingItem.imageRecords : []
+        const featuredRecord = imageRecords[0] || null
+        const galleryRecords = imageRecords.slice(1)
+
+        const imageUploads = []
+        const imageUpdates = []
+        const imageDeletes = []
+
+        if (hasTouchedFeaturedImage) {
+          if (featuredInput instanceof File) {
+            if (featuredRecord?.id) {
+              imageUpdates.push({
+                imageId: featuredRecord.id,
+                payload: {
+                  image: featuredInput,
+                  caption: featuredRecord.caption || 'Featured image',
+                  is_featured: true,
+                },
+              })
+            } else {
+              imageUploads.push({
+                image: featuredInput,
+                caption: 'Featured image',
+                is_featured: true,
+              })
             }
+          } else if (typeof featuredInput === 'string' && featuredInput.trim() !== '') {
+            if (!featuredRecord?.id) {
+              imageUploads.push({
+                image: featuredInput,
+                caption: 'Featured image',
+                is_featured: true,
+              })
+            }
+          } else if (featuredRecord?.id) {
+            imageDeletes.push(featuredRecord.id)
           }
         }
-        
-        // Ensure we have at least 5 images
-        while (updatedImages.length < 5) {
-          updatedImages.push('/declutter1.png')
+
+        if (hasTouchedOtherImages) {
+          galleryRecords
+            .filter((record) => record?.id)
+            .forEach((record) => imageDeletes.push(record.id))
+
+          otherImagesInput.forEach((entry, index) => {
+            const isUrlString =
+              typeof entry === 'string' &&
+              entry.trim() !== '' &&
+              !entry.startsWith('blob:') &&
+              !entry.startsWith('data:')
+
+            if (entry instanceof File || isUrlString) {
+              imageUploads.push({
+                image: entry,
+                caption: `Gallery image ${index + 1}`,
+                is_featured: false,
+              })
+            }
+          })
         }
-        
-        // Update the item with new data
-        existingItems[itemIndex] = {
+
+        const fallbackLocalImages = (
+          [
+            typeof featuredInput === 'string' && !featuredInput.startsWith('blob:') && !featuredInput.startsWith('data:')
+              ? featuredInput
+              : null,
+            ...otherImagesInput.filter(
+              (entry) =>
+                typeof entry === 'string' &&
+                !entry.startsWith('blob:') &&
+                !entry.startsWith('data:')
+            ),
+          ].filter(Boolean)
+        )
+
+        const localUpdatedItem = {
           ...existingItems[itemIndex],
           id: itemId,
           title: data.title,
@@ -169,20 +331,97 @@ const EditItemPage = () => {
           sellerName: data.sellerName || '',
           description: data.description,
           inventory: parseInt(data.inventory) || 1,
-          images: updatedImages.slice(0, 5)
+          images: fallbackLocalImages.length > 0 ? fallbackLocalImages : existingItem?.images || []
         }
-        
-        // Save back to localStorage
+
+        const updatedListing = await partialUpdateDeclutteringListingMutation.mutateAsync({
+          id: itemId,
+          payload: {
+            property_type: 'ITEM',
+            title: data.title,
+            description: data.description,
+            price: data.price,
+            currency: 'NGN',
+            condition: DECLUTTER_FORM_CONDITION_MAP[data.condition] || 'GOOD',
+            status: DECLUTTER_STATUS_MAP[existingItem?.status] || 'DRAFT',
+            location: data.location,
+            contactInfo: data.sellerName || '',
+            features: {
+              is_negotiable: Boolean(existingItem?.isNegotiable),
+              is_delivery_available: false,
+              is_featured: Boolean(existingItem?.isPremium),
+            },
+          },
+        })
+
+        if (imageUpdates.length > 0) {
+          await Promise.all(
+            imageUpdates.map((entry) =>
+              updateDeclutteringListingImage(itemId, entry.imageId, entry.payload)
+            )
+          )
+        }
+
+        if (imageDeletes.length > 0) {
+          await Promise.all(
+            [...new Set(imageDeletes)].map((imageId) =>
+              deleteDeclutteringListingImage(itemId, imageId)
+            )
+          )
+        }
+
+        if (imageUploads.length > 0) {
+          await Promise.all(
+            imageUploads.map((entry) =>
+              createDeclutteringListingImage(itemId, entry)
+            )
+          )
+        }
+
+        let backendImageRecords = await getDeclutteringListingImages(itemId).catch(() => [])
+        let normalizedBackendRecords = normalizeListingImageRecords(backendImageRecords)
+
+        // Keep featured-image intent authoritative using backend set_featured endpoint.
+        if (hasTouchedFeaturedImage && featuredInput) {
+          const targetFeaturedRecord = normalizedBackendRecords[0]
+          if (targetFeaturedRecord?.id) {
+            await setDeclutteringListingImageFeatured(itemId, targetFeaturedRecord.id, {
+              image: targetFeaturedRecord.image,
+              caption: targetFeaturedRecord.caption,
+            })
+            backendImageRecords = await getDeclutteringListingImages(itemId).catch(() => backendImageRecords)
+            normalizedBackendRecords = normalizeListingImageRecords(backendImageRecords)
+          }
+        }
+
+        const backendImages = normalizedBackendRecords.map((record) => record.image)
+        if (itemIndex !== -1) {
+          existingItems[itemIndex] = localUpdatedItem
+        } else {
+          existingItems.push(localUpdatedItem)
+        }
+        if (backendImages.length > 0) {
+          existingItems[itemIndex !== -1 ? itemIndex : existingItems.length - 1].images = backendImages
+        } else if (updatedListing?.images) {
+          existingItems[itemIndex !== -1 ? itemIndex : existingItems.length - 1].images = extractImageValues(updatedListing.images)
+        }
         localStorage.setItem('items', JSON.stringify(existingItems))
         
         toast.success('Item updated successfully!')
         
-        // Navigate back to the item details page
-        router.push(`/admin/items/${encodeURIComponent(itemId)}`)
+        if (pathname?.startsWith('/student')) {
+          router.push('/student/decluttering')
+        } else {
+          router.push(`/admin/items/${encodeURIComponent(itemId)}`)
+        }
       }
     } catch (error) {
       console.error('Error updating item:', error)
       toast.error('Failed to update item. Please try again.')
+    } finally {
+      if (loadingToastId) {
+        toast.dismiss(loadingToastId)
+      }
     }
   }
 
@@ -280,7 +519,10 @@ const EditItemPage = () => {
                   </label>
                   <ImageUpload
                     multiple={true}
-                    onUpload={(files) => setValue('otherImages', files)}
+                    onUpload={(files) => {
+                      setHasTouchedOtherImages(true)
+                      setValue('otherImages', files)
+                    }}
                     placeholder="Upload Image here"
                     subtitle="High quality images only"
                     existingImages={existingItem?.images?.slice(1, 5) || []}
@@ -337,7 +579,10 @@ const EditItemPage = () => {
                   </label>
                   <ImageUpload
                     multiple={false}
-                    onUpload={(file) => setValue('featuredImage', file)}
+                    onUpload={(file) => {
+                      setHasTouchedFeaturedImage(true)
+                      setValue('featuredImage', file)
+                    }}
                     placeholder="Upload Image here"
                     subtitle="High quality images only"
                     required={true}

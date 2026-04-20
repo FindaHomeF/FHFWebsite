@@ -10,12 +10,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { Building2 } from 'lucide-react'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 export default function StudentPropertiesPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [properties, setProperties] = useState([])
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [pendingDeletePropertyId, setPendingDeletePropertyId] = useState(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -34,13 +37,18 @@ export default function StudentPropertiesPage() {
     return matchesSearch && matchesStatus
   })
 
-  const handleDelete = (propertyId) => {
-    if (window.confirm('Are you sure you want to delete this property?')) {
-      const updatedProperties = properties.filter(p => p.id !== propertyId)
-      setProperties(updatedProperties)
-      localStorage.setItem('properties', JSON.stringify(updatedProperties))
-      toast.success('Property deleted successfully')
-    }
+  const requestDelete = (propertyId) => {
+    setPendingDeletePropertyId(propertyId)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    const updatedProperties = properties.filter(p => p.id !== pendingDeletePropertyId)
+    setProperties(updatedProperties)
+    localStorage.setItem('properties', JSON.stringify(updatedProperties))
+    setIsDeleteDialogOpen(false)
+    setPendingDeletePropertyId(null)
+    toast.success('Property deleted successfully')
   }
 
   const statusBadgeStyles = {
@@ -156,7 +164,7 @@ export default function StudentPropertiesPage() {
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(property.id)}
+                            onClick={() => requestDelete(property.id)}
                             className="text-red-600"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
@@ -172,6 +180,15 @@ export default function StudentPropertiesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title='Delete property?'
+        description='This action cannot be undone.'
+        confirmText='Delete property'
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   )
 }

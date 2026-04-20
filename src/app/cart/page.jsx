@@ -7,10 +7,12 @@ import Link from 'next/link'
 import { X, Plus, Minus, ShoppingCart, Trash2, ArrowRight } from 'lucide-react'
 import Header from '@/app/components/global/Header'
 import Footer from '@/app/components/global/Footer'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, cartCount, cartTotal } = useCart()
   const [removeItemId, setRemoveItemId] = useState(null)
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false)
 
   const handleRemove = (itemId, itemType) => {
     setRemoveItemId(`${itemId}-${itemType}`)
@@ -60,7 +62,7 @@ export default function CartPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={clearCart}
+                    onClick={() => setIsClearConfirmOpen(true)}
                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -219,6 +221,18 @@ export default function CartPage() {
           )}
         </div>
       </main>
+
+      <ConfirmActionDialog
+        open={isClearConfirmOpen}
+        onOpenChange={setIsClearConfirmOpen}
+        title='Clear cart?'
+        description='This will remove all items from your cart.'
+        confirmText='Clear cart'
+        onConfirm={() => {
+          clearCart()
+          setIsClearConfirmOpen(false)
+        }}
+      />
       <Footer />
     </div>
   )

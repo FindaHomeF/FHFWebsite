@@ -6,6 +6,7 @@ import { WishlistProvider } from '@/contexts/WishlistContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { DataProvider } from '@/contexts/DataContext';
 import { QueryProvider } from '@/components/providers/QueryProvider';
+import AuthSessionGuard from '@/components/providers/AuthSessionGuard';
 
 // Initialize the font with desired subsets and weights
 const mulish = Mulish({
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
            <DataProvider>
             <WishlistProvider>
               <CartProvider>
+                <AuthSessionGuard />
                 <ToasterProvider />
                 {children}
               </CartProvider>

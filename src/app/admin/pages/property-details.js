@@ -6,6 +6,7 @@ import { ArrowLeft, Download, FileSpreadsheet, Edit, Ban, Trash2, CheckCircle } 
 import { Button } from '@/components/ui/button';
 import ThumbnailGallery from '@/app/components/global/ThumbnailGallery';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const PropertyDetailsPage = ({ propertyId }) => {
   const router = useRouter();
@@ -38,6 +39,7 @@ const PropertyDetailsPage = ({ propertyId }) => {
   const [property, setProperty] = useState(defaultProperty);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Load property data from localStorage
   useEffect(() => {
@@ -112,19 +114,18 @@ const PropertyDetailsPage = ({ propertyId }) => {
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        const properties = JSON.parse(localStorage.getItem('properties') || '[]');
-        const filteredProperties = properties.filter(p => p.id !== property.id);
-        localStorage.setItem('properties', JSON.stringify(filteredProperties));
-        
-        toast.success('Property deleted successfully!');
-        router.push('/admin/properties');
-      } catch (error) {
-        toast.error('Failed to delete property');
-        setIsUpdating(false);
-      }
+    try {
+      setIsUpdating(true);
+      const properties = JSON.parse(localStorage.getItem('properties') || '[]');
+      const filteredProperties = properties.filter(p => p.id !== property.id);
+      localStorage.setItem('properties', JSON.stringify(filteredProperties));
+      
+      toast.success('Property deleted successfully!');
+      setIsDeleteDialogOpen(false);
+      router.push('/admin/properties');
+    } catch (error) {
+      toast.error('Failed to delete property');
+      setIsUpdating(false);
     }
   };
 
@@ -189,7 +190,7 @@ const PropertyDetailsPage = ({ propertyId }) => {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={handleDelete}
+                  onClick={() => setIsDeleteDialogOpen(true)}
                   className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2"
                   disabled={isUpdating}
                 >
@@ -298,6 +299,16 @@ const PropertyDetailsPage = ({ propertyId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title='Delete property?'
+        description='This action cannot be undone.'
+        confirmText='Delete property'
+        onConfirm={handleDelete}
+        isConfirming={isUpdating}
+      />
     </div>
   );
 };

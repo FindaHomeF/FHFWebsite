@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import Image from 'next/image'
 import ThumbnailGallery from '@/app/components/global/ThumbnailGallery'
 import PremiumToggle from '@/components/ui/premium-toggle'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 export default function ServiceDetailsPage() {
   const router = useRouter()
@@ -17,6 +18,7 @@ export default function ServiceDetailsPage() {
   const [service, setService] = useState(null)
   const [selectedImage, setSelectedImage] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && id) {
@@ -42,17 +44,16 @@ export default function ServiceDetailsPage() {
   }
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
-      try {
-        const services = JSON.parse(localStorage.getItem('services') || '[]')
-        const filteredServices = services.filter(s => s.id !== id)
-        localStorage.setItem('services', JSON.stringify(filteredServices))
-        
-        toast.success('Service deleted successfully!')
-        router.push('/artisan/services')
-      } catch (error) {
-        toast.error('Failed to delete service')
-      }
+    try {
+      const services = JSON.parse(localStorage.getItem('services') || '[]')
+      const filteredServices = services.filter(s => s.id !== id)
+      localStorage.setItem('services', JSON.stringify(filteredServices))
+      
+      toast.success('Service deleted successfully!')
+      setIsDeleteDialogOpen(false)
+      router.push('/artisan/services')
+    } catch (error) {
+      toast.error('Failed to delete service')
     }
   }
 
@@ -113,7 +114,7 @@ export default function ServiceDetailsPage() {
             
             <Button
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => setIsDeleteDialogOpen(true)}
               className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2"
             >
               <Trash2 className="w-4 h-4" />
@@ -247,6 +248,15 @@ export default function ServiceDetailsPage() {
           />
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title='Delete service?'
+        description='This action cannot be undone.'
+        confirmText='Delete service'
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

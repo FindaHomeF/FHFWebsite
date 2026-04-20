@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useResendEmailOtp, useVerifyEmailOtp } from '@/lib/mutations'
@@ -16,6 +16,7 @@ const formatCountdown = (seconds) => {
 }
 
 const OTP_PATTERN = /^[A-Z0-9]{8}$/
+const DEFAULT_RESEND_COOLDOWN_SECONDS = 20 * 60
 
 const EmailOtpForm = () => {
   const searchParams = useSearchParams()
@@ -34,19 +35,19 @@ const EmailOtpForm = () => {
 
   const [otp, setOtp] = useState('')
   const [countdown, setCountdown] = useState(0)
+  const [resendHint, setResendHint] = useState('You can request up to 3 OTPs per hour. Check spam before resending.')
 
-  const startTimer = () => {
-    setCountdown(60)
-    const timer = setInterval(() => {
-      setCountdown((value) => {
-        if (value <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return value - 1
-      })
-    }, 1000)
+  const startTimer = (seconds) => {
+    setCountdown(Math.max(0, Number(seconds) || 0))
   }
+
+  useEffect(() => {
+    if (countdown <= 0) return
+    const timer = window.setTimeout(() => {
+      setCountdown((value) => Math.max(value - 1, 0))
+    }, 1000)
+    return () => window.clearTimeout(timer)
+  }, [countdown])
 
   const handleVerify = async (event) => {
     event.preventDefault()
@@ -71,9 +72,14 @@ const EmailOtpForm = () => {
         email: email.trim().toLowerCase(),
         otp_type: 'email_verification',
       })
-      startTimer()
-    } catch {
-      // Handled with mutation onError toast.
+      startTimer(DEFAULT_RESEND_COOLDOWN_SECONDS)
+      setResendHint('OTP sent. For security, wait before requesting another code.')
+    } catch (error) {
+      const retryAfterSeconds = Number(error?.meta?.retryAfter)
+      if (error?.status === 429) {
+        startTimer(retryAfterSeconds || DEFAULT_RESEND_COOLDOWN_SECONDS)
+        setResendHint('Too many OTP requests. Please wait for cooldown and check your spam folder.')
+      }
     }
   }
 
@@ -124,6 +130,7 @@ const EmailOtpForm = () => {
                 <p className='text-xs text-black/50 pt-2'>
                   OTP is case-sensitive, expires in 1 hour, and account locks after 5 failed attempts.
                 </p>
+                <p className='text-xs text-black/50 pt-1'>{resendHint}</p>
               </div>
 
               <Button

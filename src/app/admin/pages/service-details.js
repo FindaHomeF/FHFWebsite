@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Download, FileSpreadsheet, CheckCircle, XCircle, Trash2, ExternalLink, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const ServiceDetailsPage = ({ serviceId }) => {
   const router = useRouter();
@@ -34,6 +35,8 @@ const ServiceDetailsPage = ({ serviceId }) => {
 
   const [service, setService] = useState(defaultService);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Load service data from localStorage
   useEffect(() => {
@@ -80,19 +83,18 @@ const ServiceDetailsPage = ({ serviceId }) => {
   };
 
   const handleReject = () => {
-    if (window.confirm('Are you sure you want to reject this service? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        const services = JSON.parse(localStorage.getItem('services') || '[]');
-        const filteredServices = services.filter(s => s.id !== service.id);
-        localStorage.setItem('services', JSON.stringify(filteredServices));
+    try {
+      setIsUpdating(true);
+      const services = JSON.parse(localStorage.getItem('services') || '[]');
+      const filteredServices = services.filter(s => s.id !== service.id);
+      localStorage.setItem('services', JSON.stringify(filteredServices));
 
-        toast.success('Service rejected successfully!');
-        router.push('/admin/services');
-      } catch (error) {
-        toast.error('Failed to reject service');
-        setIsUpdating(false);
-      }
+      setIsRejectDialogOpen(false)
+      toast.success('Service rejected successfully!');
+      router.push('/admin/services');
+    } catch (error) {
+      toast.error('Failed to reject service');
+      setIsUpdating(false);
     }
   };
 
@@ -178,19 +180,18 @@ const ServiceDetailsPage = ({ serviceId }) => {
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        const services = JSON.parse(localStorage.getItem('services') || '[]');
-        const filteredServices = services.filter(s => s.id !== service.id);
-        localStorage.setItem('services', JSON.stringify(filteredServices));
+    try {
+      setIsUpdating(true);
+      const services = JSON.parse(localStorage.getItem('services') || '[]');
+      const filteredServices = services.filter(s => s.id !== service.id);
+      localStorage.setItem('services', JSON.stringify(filteredServices));
 
-        toast.success('Service deleted successfully!');
-        router.push('/admin/services');
-      } catch (error) {
-        toast.error('Failed to delete service');
-        setIsUpdating(false);
-      }
+      setIsDeleteDialogOpen(false)
+      toast.success('Service deleted successfully!');
+      router.push('/admin/services');
+    } catch (error) {
+      toast.error('Failed to delete service');
+      setIsUpdating(false);
     }
   };
 
@@ -228,7 +229,7 @@ const ServiceDetailsPage = ({ serviceId }) => {
               <>
                 <Button
                   variant="outline"
-                  onClick={handleReject}
+                  onClick={() => setIsRejectDialogOpen(true)}
                   disabled={isUpdating}
                   className="border-red-600 text-red-600 hover:bg-red-50 flex items-center gap-2 px-4 py-2"
                 >
@@ -257,7 +258,7 @@ const ServiceDetailsPage = ({ serviceId }) => {
             ) : (
               <>
                 <Button
-                  onClick={handleDelete}
+                  onClick={() => setIsDeleteDialogOpen(true)}
                   disabled={isUpdating}
                   variant="destructive"
                   className="bg-red-600 hover:bg-red-700 flex items-center gap-2 px-4 py-2"
@@ -416,6 +417,26 @@ const ServiceDetailsPage = ({ serviceId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        title='Reject service?'
+        description='This action cannot be undone.'
+        confirmText='Reject service'
+        onConfirm={handleReject}
+        isConfirming={isUpdating}
+      />
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title='Delete service?'
+        description='This action cannot be undone.'
+        confirmText='Delete service'
+        onConfirm={handleDelete}
+        isConfirming={isUpdating}
+      />
     </div>
   );
 };

@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { toast } from 'sonner'
+import { useChangePassword } from '@/lib/mutations'
+
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
 
 // Mock settings data
 const mockSettings = {
@@ -40,10 +44,17 @@ const mockSettings = {
 };
 
 export default function SettingsPage() {
+  const { mutateAsync: changePassword, isPending: isChangingPassword } = useChangePassword()
   const [activeTab, setActiveTab] = useState('general')
   const [settings, setSettings] = useState(mockSettings)
   const [isLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  })
 
   const handleSave = () => {
     setIsSaving(true)
@@ -63,6 +74,38 @@ export default function SettingsPage() {
       },
     }));
   };
+
+  const handleChangePassword = async (event) => {
+    event.preventDefault()
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+    if (!PASSWORD_PATTERN.test(passwordData.newPassword)) {
+      toast.error('Use 8+ chars with uppercase, lowercase, number, and special character')
+      return
+    }
+
+    const accessToken = localStorage.getItem('fhf-access-token') || localStorage.getItem('access_token')
+    if (!accessToken) {
+      toast.error('Session expired. Please log in again.')
+      return
+    }
+
+    try {
+      await changePassword({
+        accessToken,
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        newPasswordConfirm: passwordData.confirmPassword,
+      })
+      setShowChangePassword(false)
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch {
+      // Error handled by mutation.
+    }
+  }
 
   const tabs = [
     { id: 'general', name: 'General', icon: Globe },
@@ -358,6 +401,20 @@ export default function SettingsPage() {
                 placeholder="5"
               />
             </div>
+            <div className="border border-black10 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-900">Password Management</h4>
+              <p className="text-sm text-gray-500 mt-1">
+                Update your admin password using your current password.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3"
+                onClick={() => setShowChangePassword(true)}
+              >
+                Change Password
+              </Button>
+            </div>
             </div>
           </div>
           )}
@@ -441,6 +498,57 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <Label htmlFor="adminCurrentPassword">Current Password *</Label>
+              <Input
+                id="adminCurrentPassword"
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(event) => setPasswordData({ ...passwordData, currentPassword: event.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="adminNewPassword">New Password *</Label>
+              <Input
+                id="adminNewPassword"
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(event) => setPasswordData({ ...passwordData, newPassword: event.target.value })}
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Must include uppercase, lowercase, number, and special character.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="adminConfirmPassword">Confirm New Password *</Label>
+              <Input
+                id="adminConfirmPassword"
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(event) => setPasswordData({ ...passwordData, confirmPassword: event.target.value })}
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowChangePassword(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isChangingPassword} className="bg-primary hover:bg-primary/90">
+                {isChangingPassword ? 'Updating...' : 'Update Password'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

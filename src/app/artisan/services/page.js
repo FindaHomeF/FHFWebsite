@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const mockServices = []
 
@@ -20,6 +21,8 @@ export default function ServicesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
   const [services, setServices] = useState(mockServices)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [pendingDeleteServiceId, setPendingDeleteServiceId] = useState(null)
 
   // Load services from localStorage
   useEffect(() => {
@@ -52,13 +55,18 @@ export default function ServicesPage() {
   const endIndex = startIndex + itemsPerPage
   const currentServices = filteredServices.slice(startIndex, endIndex)
 
-  const handleDelete = (serviceId) => {
-    if (window.confirm('Are you sure you want to delete this service?')) {
-      const updatedServices = services.filter(s => s.id !== serviceId)
-      setServices(updatedServices)
-      localStorage.setItem('services', JSON.stringify(updatedServices))
-      toast.success('Service deleted successfully')
-    }
+  const requestDelete = (serviceId) => {
+    setPendingDeleteServiceId(serviceId)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    const updatedServices = services.filter(s => s.id !== pendingDeleteServiceId)
+    setServices(updatedServices)
+    localStorage.setItem('services', JSON.stringify(updatedServices))
+    setIsDeleteDialogOpen(false)
+    setPendingDeleteServiceId(null)
+    toast.success('Service deleted successfully')
   }
 
   const statusBadgeStyles = {
@@ -187,7 +195,7 @@ export default function ServicesPage() {
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleDelete(service.id)}
+                            onClick={() => requestDelete(service.id)}
                             className="text-red-600"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
@@ -230,6 +238,15 @@ export default function ServicesPage() {
           )}
         </div>
       )}
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title='Delete service?'
+        description='This action cannot be undone.'
+        confirmText='Delete service'
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { ArrowLeft, Download, FileSpreadsheet, CheckCircle, XCircle } from 'luci
 import { Button } from '@/components/ui/button';
 import ThumbnailGallery from '@/app/components/global/ThumbnailGallery';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog';
 
 const ItemApprovalPage = ({ itemId }) => {
   const router = useRouter();
@@ -34,6 +35,7 @@ const ItemApprovalPage = ({ itemId }) => {
 
   const [item, setItem] = useState(defaultItem);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
   // Load item data from localStorage
   useEffect(() => {
@@ -92,6 +94,10 @@ const ItemApprovalPage = ({ itemId }) => {
     }
   };
 
+  const requestReject = () => {
+    setIsRejectDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6 pb-12">
       <div className="bg-white rounded-lg shadow-sm max-h-screen overflow-y-auto pb-28">
@@ -131,7 +137,7 @@ const ItemApprovalPage = ({ itemId }) => {
             
             <Button
               variant="destructive"
-              onClick={handleReject}
+              onClick={requestReject}
               className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2"
             >
               <XCircle className="w-4 h-4" />
@@ -216,6 +222,15 @@ const ItemApprovalPage = ({ itemId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        title="Reject this item?"
+        description="This removes the item from listings and cannot be undone."
+        confirmText="Reject item"
+        onConfirm={handleReject}
+      />
     </div>
   );
 };

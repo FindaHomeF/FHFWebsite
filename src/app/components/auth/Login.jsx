@@ -46,18 +46,18 @@ const Login = () => {
 
     const handleForgotPassword = async () => {
         const enteredEmail = emailValue?.trim().toLowerCase()
-        if (!enteredEmail) return
-        const isValidEmail = EMAIL_PATTERN.test(enteredEmail)
-        if (!isValidEmail) return
-
-        try {
+        if (enteredEmail && EMAIL_PATTERN.test(enteredEmail)) {
+          try {
             await requestReset({ email: enteredEmail })
-        } catch {
+          } catch {
             // Error handled in mutation with toast.
+          }
+          router.push(`/auth/reset-password?email=${encodeURIComponent(enteredEmail)}`)
+          return
         }
+        router.push('/auth/reset-password')
     }
     const emailValue = watch('email')
-    const canRequestReset = Boolean(emailValue?.trim() && EMAIL_PATTERN.test(emailValue.trim()))
 
   return (
     <div className='w-full h-full flex-col flex-itc-juc'>
@@ -126,7 +126,7 @@ const Login = () => {
                                 <button
                                   type='button'
                                   onClick={handleForgotPassword}
-                                  disabled={isRequestingReset || !canRequestReset}
+                                  disabled={isRequestingReset}
                                   className='underline text-primary outline-offset-2 font-semibold text-sm disabled:text-black/40 disabled:no-underline'
                                 >
                                   {isRequestingReset ? 'Requesting...' : 'Forgot Password?'}

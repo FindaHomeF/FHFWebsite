@@ -11,9 +11,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useState } from "react";
+import ConfirmActionDialog from "@/components/ui/confirm-action-dialog";
 
 const CartPanel = () => {
   const { cart, removeFromCart, updateQuantity, clearCart, cartCount, cartTotal } = useCart();
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
   return (
     <Sheet>
@@ -30,7 +33,7 @@ const CartPanel = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={clearCart}
+                onClick={() => setIsClearConfirmOpen(true)}
                 className="text-xs text-red-500 hover:text-red-700"
               >
                 Clear All
@@ -154,6 +157,18 @@ const CartPanel = () => {
           </div>
         )}
       </SheetContent>
+
+      <ConfirmActionDialog
+        open={isClearConfirmOpen}
+        onOpenChange={setIsClearConfirmOpen}
+        title="Clear cart?"
+        description="This will remove all items from your cart."
+        confirmText="Clear cart"
+        onConfirm={() => {
+          clearCart()
+          setIsClearConfirmOpen(false)
+        }}
+      />
     </Sheet>
   );
 };

@@ -10,10 +10,18 @@ import Footer from '@/app/components/global/Footer'
 import TwoFactorAuth from '@/app/components/auth/TwoFactorAuth'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
+import { useChangePassword } from '@/lib/mutations'
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
+
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
 
 const SecuritySettingsPage = () => {
+  const { mutateAsync: changePassword, isPending: isChangingPassword } = useChangePassword()
   const [show2FA, setShow2FA] = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [showRevokeAllConfirm, setShowRevokeAllConfirm] = useState(false)
+  const [showRevokeSessionConfirm, setShowRevokeSessionConfirm] = useState(false)
+  const [pendingRevokeSessionId, setPendingRevokeSessionId] = useState(null)
   const [activeSessions, setActiveSessions] = useState([
     {
       id: 1,
@@ -37,31 +45,54 @@ const SecuritySettingsPage = () => {
     confirmPassword: ''
   })
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault()
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error('Passwords do not match')
       return
     }
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters')
+    if (!PASSWORD_PATTERN.test(passwordData.newPassword)) {
+      toast.error('Use 8+ chars with uppercase, lowercase, number, and special character')
       return
     }
-    toast.success('Password changed successfully')
-    setShowChangePassword(false)
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+
+    const accessToken = localStorage.getItem('fhf-access-token') || localStorage.getItem('access_token')
+    if (!accessToken) {
+      toast.error('You are not authenticated. Please log in again.')
+      return
+    }
+
+    try {
+      await changePassword({
+        accessToken,
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        newPasswordConfirm: passwordData.confirmPassword,
+      })
+      setShowChangePassword(false)
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch {
+      // Mutation handles error feedback.
+    }
   }
 
   const handleRevokeSession = (sessionId) => {
+    if (!sessionId) return
     setActiveSessions(activeSessions.filter(s => s.id !== sessionId))
+    setShowRevokeSessionConfirm(false)
+    setPendingRevokeSessionId(null)
     toast.success('Session revoked')
   }
 
+  const requestRevokeSession = (sessionId) => {
+    setPendingRevokeSessionId(sessionId)
+    setShowRevokeSessionConfirm(true)
+  }
+
   const handleRevokeAll = () => {
-    if (window.confirm('Revoke all other sessions? You will need to log in again on other devices.')) {
-      setActiveSessions(activeSessions.filter(s => s.current))
-      toast.success('All other sessions revoked')
-    }
+    setActiveSessions(activeSessions.filter(s => s.current))
+    setShowRevokeAllConfirm(false)
+    toast.success('All other sessions revoked')
   }
 
   return (
@@ -163,7 +194,7 @@ const SecuritySettingsPage = () => {
                 </div>
               </div>
               {activeSessions.filter(s => !s.current).length > 0 && (
-                <Button variant="outline" onClick={handleRevokeAll} className="text-red-600 border-red-200 hover:bg-red-50">
+                <Button variant="outline" onClick={() => setShowRevokeAllConfirm(true)} className="text-red-600 border-red-200 hover:bg-red-50">
                   Revoke All Others
                 </Button>
               )}
@@ -193,7 +224,7 @@ const SecuritySettingsPage = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleRevokeSession(session.id)}
+                      onClick={() => requestRevokeSession(session.id)}
                       className="text-red-600 border-red-200 hover:bg-red-50"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
@@ -249,8 +280,8 @@ const SecuritySettingsPage = () => {
                 <Button variant="outline" onClick={() => setShowChangePassword(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary/90">
-                  Update Password
+                <Button type="submit" disabled={isChangingPassword} className="bg-primary hover:bg-primary/90">
+                  {isChangingPassword ? 'Updating...' : 'Update Password'}
                 </Button>
               </DialogFooter>
             </form>
@@ -262,6 +293,24 @@ const SecuritySettingsPage = () => {
           isOpen={show2FA}
           onClose={() => setShow2FA(false)}
           currentStatus={true}
+        />
+
+        <ConfirmActionDialog
+          open={showRevokeAllConfirm}
+          onOpenChange={setShowRevokeAllConfirm}
+          title='Revoke all other sessions?'
+          description='You will need to log in again on other devices.'
+          confirmText='Revoke sessions'
+          onConfirm={handleRevokeAll}
+        />
+
+        <ConfirmActionDialog
+          open={showRevokeSessionConfirm}
+          onOpenChange={setShowRevokeSessionConfirm}
+          title='Revoke this session?'
+          description='The selected device will be signed out immediately.'
+          confirmText='Revoke session'
+          onConfirm={() => handleRevokeSession(pendingRevokeSessionId)}
         />
       </main>
       <Footer />

@@ -6,6 +6,7 @@ import { ArrowLeft, Download, FileSpreadsheet, CheckCircle, XCircle } from 'luci
 import { Button } from '@/components/ui/button';
 import ThumbnailGallery from '@/app/components/global/ThumbnailGallery';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog';
 
 const ApprovalPage = ({ propertyId }) => {
   const router = useRouter();
@@ -37,6 +38,7 @@ const ApprovalPage = ({ propertyId }) => {
 
   const [property, setProperty] = useState(defaultProperty);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
   // Load property data from localStorage
   useEffect(() => {
@@ -97,6 +99,10 @@ const ApprovalPage = ({ propertyId }) => {
     }
   };
 
+  const requestReject = () => {
+    setIsRejectDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Navigation Bar */}
@@ -137,7 +143,7 @@ const ApprovalPage = ({ propertyId }) => {
             
             <Button
               variant="destructive"
-              onClick={handleReject}
+              onClick={requestReject}
               className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2"
             >
               <XCircle className="w-4 h-4" />
@@ -243,6 +249,15 @@ const ApprovalPage = ({ propertyId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        title="Reject this property?"
+        description="This removes the property from listings and cannot be undone."
+        confirmText="Reject property"
+        onConfirm={handleReject}
+      />
     </div>
   );
 };

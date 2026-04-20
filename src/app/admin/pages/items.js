@@ -259,12 +259,20 @@ export default function ItemsPage() {
   // Filter items
   const filteredItems = useMemo(() => {
     return items.filter(item => {
-      const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           item.sellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           item.category.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter
-      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter
-      const matchesCondition = conditionFilter === 'all' || item.condition === conditionFilter
+      const normalizedSearchTerm = String(searchTerm || '').toLowerCase()
+      const normalizedTitle = String(item?.title || '').toLowerCase()
+      const normalizedSellerName = String(item?.sellerName || '').toLowerCase()
+      const normalizedCategory = String(item?.category || '').toLowerCase()
+      const normalizedStatus = String(item?.status || '')
+      const normalizedCondition = String(item?.condition || '')
+
+      const matchesSearch =
+        normalizedTitle.includes(normalizedSearchTerm) ||
+        normalizedSellerName.includes(normalizedSearchTerm) ||
+        normalizedCategory.includes(normalizedSearchTerm)
+      const matchesStatus = statusFilter === 'all' || normalizedStatus === statusFilter
+      const matchesCategory = categoryFilter === 'all' || String(item?.category || '') === categoryFilter
+      const matchesCondition = conditionFilter === 'all' || normalizedCondition === conditionFilter
       
       return matchesSearch && matchesStatus && matchesCategory && matchesCondition
     })

@@ -1,16 +1,26 @@
 'use client'
 import { createContext, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { 
-  propertiesQueryOptions, 
-  itemsQueryOptions, 
-  servicesQueryOptions,
+import {
   usersQueryOptions,
   transactionsQueryOptions,
-  propertyQueryOptions,
-  itemQueryOptions,
-  serviceQueryOptions
+  currentUserProfileQueryOptions,
+  studentIdStatusQueryOptions,
 } from '@/lib/query-options'
+import {
+  propertiesQueryOptions,
+  propertyQueryOptions,
+} from '@/lib/query-options-housing'
+import {
+  itemsQueryOptions,
+  itemQueryOptions,
+  itemViewStatsQueryOptions,
+  myItemsQueryOptions,
+} from '@/lib/query-options-decluttering'
+import {
+  servicesQueryOptions,
+  serviceQueryOptions,
+} from '@/lib/query-options-service-providers'
 
 const DataContext = createContext(null)
 
@@ -20,6 +30,8 @@ export const DataProvider = ({ children }) => {
   const itemsQuery = useQuery(itemsQueryOptions())
   const servicesQuery = useQuery(servicesQueryOptions())
   const usersQuery = useQuery(usersQueryOptions())
+  const currentUserProfileQuery = useQuery(currentUserProfileQueryOptions())
+  const studentIdStatusQuery = useQuery(studentIdStatusQueryOptions())
 
   return (
     <DataContext.Provider value={{
@@ -28,6 +40,8 @@ export const DataProvider = ({ children }) => {
       items: itemsQuery.data || [],
       services: servicesQuery.data || [],
       users: usersQuery.data || [],
+      currentUserProfile: currentUserProfileQuery.data || null,
+      studentIdStatus: studentIdStatusQuery.data || null,
       
       // Loading states
       isLoading: propertiesQuery.isLoading || itemsQuery.isLoading || servicesQuery.isLoading || usersQuery.isLoading,
@@ -37,16 +51,21 @@ export const DataProvider = ({ children }) => {
       itemsQuery,
       servicesQuery,
       usersQuery,
+      currentUserProfileQuery,
+      studentIdStatusQuery,
       
       // Query options for use in components
       propertiesQueryOptions,
       itemsQueryOptions,
+      myItemsQueryOptions,
       servicesQueryOptions,
       usersQueryOptions,
       transactionsQueryOptions,
       propertyQueryOptions,
       itemQueryOptions,
-      serviceQueryOptions
+      serviceQueryOptions,
+      currentUserProfileQueryOptions,
+      studentIdStatusQueryOptions
     }}>
       {children}
     </DataContext.Provider>
@@ -71,6 +90,10 @@ export const useItems = (filters = {}) => {
   return useQuery(itemsQueryOptions(filters))
 }
 
+export const useMyItems = (filters = {}) => {
+  return useQuery(myItemsQueryOptions(filters))
+}
+
 // Hook to get filtered services
 export const useServices = (filters = {}) => {
   return useQuery(servicesQueryOptions(filters))
@@ -91,7 +114,19 @@ export const useItem = (id) => {
   return useQuery(itemQueryOptions(id))
 }
 
+export const useItemViewStats = (id) => {
+  return useQuery(itemViewStatsQueryOptions(id))
+}
+
 // Hook to get single service
 export const useService = (id) => {
   return useQuery(serviceQueryOptions(id))
+}
+
+export const useCurrentUserProfile = () => {
+  return useQuery(currentUserProfileQueryOptions())
+}
+
+export const useStudentIdStatus = () => {
+  return useQuery(studentIdStatusQueryOptions())
 }

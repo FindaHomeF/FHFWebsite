@@ -1,6 +1,6 @@
 'use client'
 import React, { memo, useState, useEffect } from 'react'
-import { MoreHorizontal, Check, CheckSquare, Square, CheckCircle2, Trash2, Download, XCircle, Ban, Power } from 'lucide-react'
+import { MoreHorizontal, Check, CheckSquare, Square, CheckCircle2, Trash2, Download, XCircle, Ban, Power, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
@@ -84,7 +84,8 @@ const AdminTableWithBulk = ({
       export: 'Export',
       reject: 'Reject',
       suspend: 'Suspend',
-      activate: 'Activate'
+      activate: 'Activate',
+      restore: 'Restore',
     }
     return labels[action] || action
   }
@@ -96,9 +97,21 @@ const AdminTableWithBulk = ({
       export: Download,
       reject: XCircle,
       suspend: Ban,
-      activate: Power
+      activate: Power,
+      restore: RotateCcw,
     }
     return icons[action] || CheckCircle2
+  }
+
+  const getActionDescription = (action, count) => {
+    const normalizedAction = String(getActionLabel(action) || 'proceed').toLowerCase()
+    if (action === 'delete' || action === 'reject') {
+      return `Are you sure you want to ${normalizedAction} ${count} item(s)? This action cannot be undone.`
+    }
+    if (action === 'restore') {
+      return `Are you sure you want to restore ${count} item(s)? They will return to active listings.`
+    }
+    return `Are you sure you want to ${normalizedAction} ${count} item(s)?`
   }
 
   const TableRow = memo(({ item, index }) => {
@@ -307,8 +320,7 @@ const AdminTableWithBulk = ({
           <DialogHeader>
             <DialogTitle>Confirm Bulk Action</DialogTitle>
             <DialogDescription>
-              Are you sure you want to <strong>{getActionLabel(pendingAction)}</strong> {selectedItems.length} item(s)? 
-              This action cannot be undone.
+              {getActionDescription(pendingAction, selectedItems.length)}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

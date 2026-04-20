@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Download, FileSpreadsheet, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const ServiceApprovalPage = ({ serviceId }) => {
   const router = useRouter();
@@ -34,6 +35,7 @@ const ServiceApprovalPage = ({ serviceId }) => {
 
   const [service, setService] = useState(defaultService);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
   // Load service data from localStorage
   useEffect(() => {
@@ -92,19 +94,18 @@ const ServiceApprovalPage = ({ serviceId }) => {
   };
 
   const handleReject = () => {
-    if (window.confirm('Are you sure you want to reject this service? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        const services = JSON.parse(localStorage.getItem('services') || '[]');
-        const filteredServices = services.filter(s => s.id !== service.id);
-        localStorage.setItem('services', JSON.stringify(filteredServices));
+    try {
+      setIsUpdating(true);
+      const services = JSON.parse(localStorage.getItem('services') || '[]');
+      const filteredServices = services.filter(s => s.id !== service.id);
+      localStorage.setItem('services', JSON.stringify(filteredServices));
 
-        toast.success('Service rejected successfully!');
-        router.push('/admin/services');
-      } catch (error) {
-        toast.error('Failed to reject service');
-        setIsUpdating(false);
-      }
+      setIsRejectDialogOpen(false)
+      toast.success('Service rejected successfully!');
+      router.push('/admin/services');
+    } catch (error) {
+      toast.error('Failed to reject service');
+      setIsUpdating(false);
     }
   };
 
@@ -141,7 +142,7 @@ const ServiceApprovalPage = ({ serviceId }) => {
             {/* Approve and Reject buttons for new accounts */}
             <Button
               variant="outline"
-              onClick={handleReject}
+              onClick={() => setIsRejectDialogOpen(true)}
               disabled={isUpdating}
               className="border-red-600 text-red-600 hover:bg-red-50 flex items-center gap-2 px-4 py-2"
             >
@@ -297,6 +298,16 @@ const ServiceApprovalPage = ({ serviceId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        title='Reject service?'
+        description='This action cannot be undone.'
+        confirmText='Reject service'
+        onConfirm={handleReject}
+        isConfirming={isUpdating}
+      />
     </div>
   );
 };

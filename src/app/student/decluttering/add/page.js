@@ -11,50 +11,19 @@ import CommissionCalculator from '@/components/ui/commission-calculator'
 import PremiumToggle from '@/components/ui/premium-toggle'
 import { useStudent } from '../../context/StudentContext'
 import { toast } from 'sonner'
+import { useCreateDeclutteringListing } from '@/lib/mutations'
 
-const fileToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = (e) => {
-      const img = new Image()
-      img.src = e.target.result
-      img.onload = () => {
-        const MAX_WIDTH = 800
-        const MAX_HEIGHT = 600
-        let width = img.width
-        let height = img.height
-        
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height = (height * MAX_WIDTH) / width
-            width = MAX_WIDTH
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width = (width * MAX_HEIGHT) / height
-            height = MAX_HEIGHT
-          }
-        }
-        
-        const canvas = document.createElement('canvas')
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, width, height)
-        
-        const compressed = canvas.toDataURL('image/jpeg', 0.7)
-        resolve(compressed)
-      }
-      img.onerror = (error) => reject(error)
-    }
-    reader.onerror = (error) => reject(error)
-  })
+const DECLUTTER_FORM_CONDITION_MAP = {
+  Excellent: 'LIKE_NEW',
+  Good: 'GOOD',
+  Fair: 'FAIR',
+  Poor: 'POOR',
 }
 
 const AddDeclutteringPage = () => {
   const router = useRouter()
   const { canManageListings } = useStudent()
+  const createDeclutteringListingMutation = useCreateDeclutteringListing()
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     defaultValues: {
       title: '',
@@ -82,73 +51,67 @@ const AddDeclutteringPage = () => {
   }, [canManageListings, router])
 
   const onSubmit = async (data) => {
+    let loadingToastId
     try {
       if (!data.featuredImage && (!data.otherImages || data.otherImages.length === 0)) {
         toast.error('Please upload at least one image')
         return
       }
-      
-      toast.loading('Saving item...')
-      
-      const existingItems = JSON.parse(localStorage.getItem('items') || '[]')
-      const nextId = existingItems.length + 1
-      const tempId = `#D${nextId.toString().padStart(3, '0')}`
-      
+
+      loadingToastId = toast.loading('Saving item...')
       const images = []
-      
+
       if (data.featuredImage instanceof File) {
-        const base64 = await fileToBase64(data.featuredImage)
-        images.push(base64)
+        images.push({ image: data.featuredImage, caption: 'Featured image', is_featured: true })
       } else if (data.otherImages && data.otherImages.length > 0 && data.otherImages[0] instanceof File) {
-        const base64 = await fileToBase64(data.otherImages[0])
-        images.push(base64)
-      } else {
-        images.push('/declutter1.png')
+        images.push({ image: data.otherImages[0], caption: 'Featured image', is_featured: true })
       }
-      
-      const startIndex = (data.featuredImage instanceof File || 
-                          (data.otherImages && data.otherImages.length > 0 && !data.featuredImage)) && 
+
+      const startIndex = (data.featuredImage instanceof File ||
+                          (data.otherImages && data.otherImages.length > 0 && !data.featuredImage)) &&
                          !data.featuredImage ? 1 : 0
-      
+
       if (data.otherImages && data.otherImages.length > startIndex) {
         for (let i = startIndex; i < data.otherImages.length; i++) {
           const file = data.otherImages[i]
           if (file instanceof File) {
-            const base64 = await fileToBase64(file)
-            images.push(base64)
+            images.push({
+              image: file,
+              caption: `Gallery image ${images.length + 1}`,
+              is_featured: false,
+            })
           }
         }
       }
-      
-      while (images.length < 5) {
-        images.push('/declutter1.png')
-      }
-      
-      const itemData = {
-        id: tempId,
-        studentId: 'student-1', // In real app, get from auth
-        title: data.title,
-        price: `₦${data.price}`,
-        category: data.category,
-        condition: data.condition,
-        location: data.location,
-        sellerName: data.sellerName || '',
-        description: data.description,
-        inventory: parseInt(data.inventory) || 1,
-        status: 'Pending', // Items need admin approval
-        images: images.slice(0, 5),
-        isPremium: data.isPremium || false,
-        premiumExpiry: data.isPremium ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() : null
-      }
-      
-      existingItems.push(itemData)
-      localStorage.setItem('items', JSON.stringify(existingItems))
-      
+
+      await createDeclutteringListingMutation.mutateAsync({
+        payload: {
+          title: data.title,
+          description: data.description,
+          price: data.price,
+          currency: 'NGN',
+          condition: DECLUTTER_FORM_CONDITION_MAP[data.condition] || 'GOOD',
+          status: 'DRAFT',
+          location: data.location,
+          contactInfo: data.sellerName || '',
+          features: {
+            is_negotiable: false,
+            is_delivery_available: false,
+            is_featured: Boolean(data.isPremium),
+          },
+          images,
+        },
+      })
+
       toast.success('Item added successfully! Waiting for admin approval.')
       router.push(`/student/decluttering`)
     } catch (error) {
       console.error('Error saving item:', error)
       toast.error('Failed to save item. Please try again.')
+    } finally {
+      if (loadingToastId) {
+        toast.dismiss(loadingToastId)
+      }
     }
   }
 

@@ -1,43 +1,52 @@
 "use client"
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ButtonGS } from '@/app/components/global/Buttons/ButtonGS'
 import WishlistBtn from '@/app/components/global/Buttons/WishlistBtn'
 import { useCart } from '@/contexts/CartContext'
 import { MapPin, ShoppingCart, MessageCircle } from 'lucide-react'
-import { FaRegStar, FaStar, FaRegClock } from 'react-icons/fa'
+import { FaStar, FaRegClock } from 'react-icons/fa'
 import { Button } from '@/components/ui/button'
 import ReviewsModal from '@/app/components/global/ReviewsModal'
+import { useItemViewStats } from '@/contexts/DataContext'
 
-const ItemDetails = ({ itemId }) => {
+const STATUS_LABELS = {
+    ACTIVE: 'Available',
+    PENDING_APPROVAL: 'Pending Approval',
+    SOLD: 'Sold',
+    DRAFT: 'Draft',
+    EXPIRED: 'Expired',
+}
+
+const formatPriceDisplay = (itemData) => {
+    if (itemData?.priceDisplay) {
+        return itemData.priceDisplay
+    }
+    const numericPrice = Number(itemData?.price)
+    if (Number.isFinite(numericPrice)) {
+        return `₦ ${numericPrice.toLocaleString()}`
+    }
+    return String(itemData?.price || '₦ 0')
+}
+
+const ItemDetails = ({ itemId, itemData }) => {
     const router = useRouter()
     const { addToCart } = useCart();
     const [showReviews, setShowReviews] = useState(false)
-
-    const itemData = {
-        id: itemId,
-        itemId: itemId,
-        title: "Wooden Study Desk",
-        category: "Furniture",
-        price: 15000,
-        condition: "Good",
-        location: "North Gate, Akure",
-        seller: "John Doe",
-        sellerRating: 4.5,
-        sellerReviews: 25,
-        postedDate: "2 days ago",
-        description: `High-quality wooden study desk in excellent condition. Perfect for students. 
-        Comes with a spacious drawer and smooth surface. Dimensions: 120cm x 60cm x 75cm. 
-        No scratches or damages. Ready for immediate pickup.`,
-        image: '/declutter1.png'
-    };
+    const { data: viewStats } = useItemViewStats(itemData?.id || itemData?.itemId || itemId)
 
     const handleAddToCart = () => {
         addToCart({
             ...itemData,
+            id: itemData.id || itemData.itemId || itemId,
             type: 'decluttered'
         });
     };
+
+    const sellerName = itemData.ownerName || itemData.owner_name || itemData.seller || 'Individual Seller'
+    const statusLabel = STATUS_LABELS[itemData.status] || itemData.status || 'Available'
+    const postedDate = itemData.createdAt
+        ? new Date(itemData.createdAt).toLocaleDateString()
+        : itemData.postedDate || 'Recently posted'
 
     return (
         <div className='w-full lg:w-3/6 mt-3'>
@@ -48,7 +57,7 @@ const ItemDetails = ({ itemId }) => {
                         {itemData.condition}
                     </div>
                     <div className='w-fit bg-primary/10 text-primary px-4 py-1 rounded-full text-sm'>
-                        Available
+                        {statusLabel}
                     </div>
                 </div>
 
@@ -75,7 +84,7 @@ const ItemDetails = ({ itemId }) => {
 
             {/* Price */}
             <div className='mt-5 font-bold text-2xl md:text-3xl text-primary'>
-                ₦ {itemData.price.toLocaleString()}
+                {formatPriceDisplay(itemData)}
             </div>
 
             {/* Description */}
@@ -105,11 +114,19 @@ const ItemDetails = ({ itemId }) => {
                     </div>
                     <div>
                         <p className='text-gray-500'>Posted</p>
-                        <p className='font-semibold'>{itemData.postedDate}</p>
+                        <p className='font-semibold'>{postedDate}</p>
                     </div>
                     <div>
                         <p className='text-gray-500'>Category</p>
                         <p className='font-semibold'>{itemData.category}</p>
+                    </div>
+                    <div>
+                        <p className='text-gray-500'>Total Views</p>
+                        <p className='font-semibold'>{viewStats?.total_views ?? itemData?.viewStats?.total_views ?? 0}</p>
+                    </div>
+                    <div>
+                        <p className='text-gray-500'>Views (24h)</p>
+                        <p className='font-semibold'>{viewStats?.views_24h ?? itemData?.viewStats?.views_24h ?? 0}</p>
                     </div>
                 </div>
             </div>
@@ -127,7 +144,7 @@ const ItemDetails = ({ itemId }) => {
 
                     <div>
                         <h3 className='mt-2 font-semibold text-base'>
-                            {itemData.seller}
+                            {sellerName}
                         </h3>
 
                         <h3 className='text-xs md:text-sm w-fit text-tertiary'>
@@ -148,7 +165,7 @@ const ItemDetails = ({ itemId }) => {
                             >
                                 <FaStar className="text-secondary" strokeWidth={1.5} size={20} />
                                 <p className="text-black/60 text-sm">
-                                    {itemData.sellerRating} <span className=''>({itemData.sellerReviews} Reviews)</span>
+                                    {itemData.sellerRating || 0} <span className=''>({itemData.sellerReviews || 0} Reviews)</span>
                                 </p>
                             </button>
                         </div>
@@ -186,8 +203,8 @@ const ItemDetails = ({ itemId }) => {
             <ReviewsModal
                 isOpen={showReviews}
                 onClose={() => setShowReviews(false)}
-                rating={itemData.sellerRating}
-                title={`Reviews for ${itemData.seller}`}
+                rating={itemData.sellerRating || 0}
+                title={`Reviews for ${sellerName}`}
             />
         </div>
     );

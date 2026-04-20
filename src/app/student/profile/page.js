@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
 import { validateStudentId, formatStudentId } from '@/lib/studentIdValidation'
 import StudentIdInput from '@/components/ui/student-id-input'
+import { useUploadStudentIdDocument } from '@/lib/mutations'
 
 const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
@@ -25,6 +26,7 @@ export default function StudentProfilePage() {
   const { studentProfile, setStudentProfile, isProfileComplete, isStudentIdUploaded, isStudentIdApproved } = useStudent()
   const [profileImage, setProfileImage] = useState(null)
   const [studentIdDocument, setStudentIdDocument] = useState(null)
+  const { mutateAsync: uploadStudentIdDocument, isPending: isUploadingStudentId } = useUploadStudentIdDocument()
 
   const { register, handleSubmit, setValue, watch, formState: { errors }, reset } = useForm({
     defaultValues: {
@@ -79,13 +81,21 @@ export default function StudentProfilePage() {
         toast.error('Document size should be less than 10MB')
         return
       }
-      const base64 = await fileToBase64(file)
-      setStudentIdDocument(base64)
-      setStudentProfile({ 
-        studentIdDocument: base64,
-        studentIdApprovalStatus: 'pending' // Reset to pending when new document uploaded
-      })
-      toast.success('Student ID document uploaded. Waiting for admin approval.')
+      try {
+        const response = await uploadStudentIdDocument({ studentIdDocument: file })
+        const uploadedDocument =
+          response?.student_id_document || response?.studentIdDocument || file.name
+        const approvalStatus =
+          response?.student_id_approval_status || response?.studentIdApprovalStatus || 'pending'
+
+        setStudentIdDocument(uploadedDocument)
+        setStudentProfile({
+          studentIdDocument: uploadedDocument,
+          studentIdApprovalStatus: approvalStatus,
+        })
+      } catch {
+        // Error handled in mutation.
+      }
     }
   }
 
@@ -354,9 +364,10 @@ export default function StudentProfilePage() {
                         type="button"
                         variant="outline"
                         size="sm"
+                        disabled={isUploadingStudentId}
                         asChild
                       >
-                        <span>Change Document</span>
+                        <span>{isUploadingStudentId ? 'Uploading...' : 'Change Document'}</span>
                       </Button>
                     </label>
                   </div>
@@ -385,9 +396,10 @@ export default function StudentProfilePage() {
                     <Button
                       type="button"
                       variant="outline"
+                      disabled={isUploadingStudentId}
                       asChild
                     >
-                      <span>Upload Student ID</span>
+                      <span>{isUploadingStudentId ? 'Uploading...' : 'Upload Student ID'}</span>
                     </Button>
                   </label>
                 </div>

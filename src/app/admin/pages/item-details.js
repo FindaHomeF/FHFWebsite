@@ -6,6 +6,7 @@ import { ArrowLeft, Download, FileSpreadsheet, Edit, Ban, Trash2, CheckCircle } 
 import { Button } from '@/components/ui/button';
 import ThumbnailGallery from '@/app/components/global/ThumbnailGallery';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const ItemDetailsPage = ({ itemId }) => {
   const router = useRouter();
@@ -35,6 +36,7 @@ const ItemDetailsPage = ({ itemId }) => {
   const [item, setItem] = useState(defaultItem);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Load item data from localStorage
   useEffect(() => {
@@ -105,19 +107,18 @@ const ItemDetailsPage = ({ itemId }) => {
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        const items = JSON.parse(localStorage.getItem('items') || '[]');
-        const filteredItems = items.filter(p => p.id !== item.id);
-        localStorage.setItem('items', JSON.stringify(filteredItems));
-        
-        toast.success('Item deleted successfully!');
-        router.push('/admin/items');
-      } catch (error) {
-        toast.error('Failed to delete item');
-        setIsUpdating(false);
-      }
+    try {
+      setIsUpdating(true);
+      const items = JSON.parse(localStorage.getItem('items') || '[]');
+      const filteredItems = items.filter(p => p.id !== item.id);
+      localStorage.setItem('items', JSON.stringify(filteredItems));
+      
+      toast.success('Item deleted successfully!');
+      setIsDeleteDialogOpen(false);
+      router.push('/admin/items');
+    } catch (error) {
+      toast.error('Failed to delete item');
+      setIsUpdating(false);
     }
   };
 
@@ -181,7 +182,7 @@ const ItemDetailsPage = ({ itemId }) => {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={handleDelete}
+                  onClick={() => setIsDeleteDialogOpen(true)}
                   className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2"
                   disabled={isUpdating}
                 >
@@ -269,6 +270,16 @@ const ItemDetailsPage = ({ itemId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title='Delete item?'
+        description='This action cannot be undone.'
+        confirmText='Delete item'
+        onConfirm={handleDelete}
+        isConfirming={isUpdating}
+      />
     </div>
   );
 };

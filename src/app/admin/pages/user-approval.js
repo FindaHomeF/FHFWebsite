@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Download, FileSpreadsheet, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const UserApprovalPage = ({ userId }) => {
   const router = useRouter();
@@ -29,6 +30,7 @@ const UserApprovalPage = ({ userId }) => {
 
   const [user, setUser] = useState(defaultUser);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -65,18 +67,17 @@ const UserApprovalPage = ({ userId }) => {
   };
 
   const handleReject = () => {
-    if (window.confirm('Are you sure you want to reject this user? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const filteredUsers = users.filter(u => u.id !== user.id);
-        localStorage.setItem('users', JSON.stringify(filteredUsers));
-        toast.success('User rejected successfully!');
-        router.push('/admin/users');
-      } catch (error) {
-        toast.error('Failed to reject user');
-        setIsUpdating(false);
-      }
+    try {
+      setIsUpdating(true);
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const filteredUsers = users.filter(u => u.id !== user.id);
+      localStorage.setItem('users', JSON.stringify(filteredUsers));
+      setIsRejectDialogOpen(false)
+      toast.success('User rejected successfully!');
+      router.push('/admin/users');
+    } catch (error) {
+      toast.error('Failed to reject user');
+      setIsUpdating(false);
     }
   };
 
@@ -100,7 +101,7 @@ const UserApprovalPage = ({ userId }) => {
               Download CSV
             </Button>
             
-            <Button variant="outline" onClick={handleReject} disabled={isUpdating} className="border-red-600 text-red-600 hover:bg-red-50 flex items-center gap-2 px-4 py-2">
+            <Button variant="outline" onClick={() => setIsRejectDialogOpen(true)} disabled={isUpdating} className="border-red-600 text-red-600 hover:bg-red-50 flex items-center gap-2 px-4 py-2">
               <XCircle className="w-4 h-4" />
               Reject
             </Button>
@@ -179,6 +180,16 @@ const UserApprovalPage = ({ userId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        title='Reject user?'
+        description='This action cannot be undone.'
+        confirmText='Reject user'
+        onConfirm={handleReject}
+        isConfirming={isUpdating}
+      />
     </div>
   );
 };

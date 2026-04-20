@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
 
 const TransactionDetailsPage = ({ transactionId }) => {
   const router = useRouter();
@@ -35,6 +36,7 @@ const TransactionDetailsPage = ({ transactionId }) => {
 
   const [transaction, setTransaction] = useState(defaultTransaction);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
 
   // Load transaction data from localStorage or use mock data
   useEffect(() => {
@@ -256,24 +258,23 @@ const TransactionDetailsPage = ({ transactionId }) => {
   };
 
   const handleReject = () => {
-    if (window.confirm('Are you sure you want to reject this transaction? This action cannot be undone.')) {
-      try {
-        setIsUpdating(true);
-        const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-        const transactionIndex = transactions.findIndex(t => t.id === transaction.id);
+    try {
+      setIsUpdating(true);
+      const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+      const transactionIndex = transactions.findIndex(t => t.id === transaction.id);
+      
+      if (transactionIndex !== -1) {
+        transactions[transactionIndex].status = 'Failed';
+        localStorage.setItem('transactions', JSON.stringify(transactions));
         
-        if (transactionIndex !== -1) {
-          transactions[transactionIndex].status = 'Failed';
-          localStorage.setItem('transactions', JSON.stringify(transactions));
-          
-          setTransaction({ ...transaction, status: 'Failed' });
-          toast.success('Transaction rejected successfully!');
-          setIsUpdating(false);
-        }
-      } catch (error) {
-        toast.error('Failed to reject transaction');
+        setTransaction({ ...transaction, status: 'Failed' });
+        setIsRejectDialogOpen(false)
+        toast.success('Transaction rejected successfully!');
         setIsUpdating(false);
       }
+    } catch (error) {
+      toast.error('Failed to reject transaction');
+      setIsUpdating(false);
     }
   };
 
@@ -321,6 +322,16 @@ const TransactionDetailsPage = ({ transactionId }) => {
               <Download className="w-4 h-4" />
               Download PDF
                 </Button>
+            {transaction.status !== 'Failed' && (
+              <Button
+                onClick={() => setIsRejectDialogOpen(true)}
+                variant="destructive"
+                className="flex items-center gap-2"
+                disabled={isUpdating}
+              >
+                Reject Transaction
+              </Button>
+            )}
           </div>
         </div>
 
@@ -389,6 +400,16 @@ const TransactionDetailsPage = ({ transactionId }) => {
           </div>
         </div>
       </div>
+
+      <ConfirmActionDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        title='Reject transaction?'
+        description='This action cannot be undone.'
+        confirmText='Reject transaction'
+        onConfirm={handleReject}
+        isConfirming={isUpdating}
+      />
     </div>
   );
 };

@@ -105,7 +105,7 @@ const ImageUpload = ({
       
       if (validFile && validFile.type.startsWith('image/') && validFile.size <= 5 * 1024 * 1024) {
         const newImgs = [...existingImgs]
-        newImgs[parseInt(replaceIndex)] = URL.createObjectURL(validFile)
+        newImgs[parseInt(replaceIndex)] = validFile
         setExistingImgs(newImgs)
         onUpload(multiple ? newImgs : newImgs[0])
         toast.success('Image updated successfully')
