@@ -64,7 +64,7 @@ const StudentIdInput = ({
     }
   }
 
-  const inputClassName = `w-full border-black10 ${
+  const inputClassName = `w-full rounded-md border border-black/40 h-[2.8rem] px-3 ${
     validation && !validation.isValid 
       ? 'border-red-500' 
       : validation?.isExpired 

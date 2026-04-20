@@ -5,6 +5,7 @@ const Artisan = () => {
     <div className="w-full">
         <SignUpForm 
             head={'Sign Up as an Artisan'}
+            role={'artisan'}
         />
     </div>
   )

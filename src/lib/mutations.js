@@ -4,6 +4,93 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { saveToStorage } from './query-options'
 import { toast } from 'sonner'
+import { clearAuthStorage, loginUser, logoutUser, persistAuthSession, registerUser, requestPasswordReset, resendEmailOtp, verifyEmailOtp } from './auth-api'
+
+// Auth mutations
+export const useRegisterUser = () => {
+  return useMutation({
+    mutationFn: registerUser,
+    onSuccess: () => {
+      toast.success('Registration successful. Check your email for OTP.')
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Registration failed')
+      console.error('Error during registration:', error)
+    },
+  })
+}
+
+export const useVerifyEmailOtp = () => {
+  return useMutation({
+    mutationFn: verifyEmailOtp,
+    onSuccess: () => {
+      toast.success('Email verified successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'OTP verification failed')
+      console.error('Error verifying email OTP:', error)
+    },
+  })
+}
+
+export const useResendEmailOtp = () => {
+  return useMutation({
+    mutationFn: resendEmailOtp,
+    onSuccess: () => {
+      toast.success('A new OTP has been sent to your email')
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Unable to resend OTP')
+      console.error('Error resending email OTP:', error)
+    },
+  })
+}
+
+export const useLogoutUser = () => {
+  return useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
+      clearAuthStorage()
+      toast.success('Logged out successfully')
+    },
+    onError: (error) => {
+      // Security-first fallback: clear local auth state even when token is invalid/expired.
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Logout failed')
+      console.error('Error during logout:', error)
+    },
+  })
+}
+
+export const useLoginUser = () => {
+  return useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      persistAuthSession(data)
+      toast.success('Login successful')
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Login failed')
+      console.error('Error during login:', error)
+    },
+  })
+}
+
+export const useRequestPasswordReset = () => {
+  return useMutation({
+    mutationFn: requestPasswordReset,
+    onSuccess: () => {
+      // Intentional generic message to avoid user enumeration.
+      toast.success('If the email is registered, a password reset OTP has been sent.')
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Unable to process reset request right now')
+      console.error('Error requesting password reset:', error)
+    },
+  })
+}
 
 // Property mutations
 export const useCreateProperty = () => {

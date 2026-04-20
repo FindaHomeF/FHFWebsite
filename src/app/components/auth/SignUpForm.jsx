@@ -2,31 +2,92 @@
 import Image from 'next/image';
 import { useForm } from 'react-hook-form'
 import { FaEye } from 'react-icons/fa';
+import { FaEyeSlash } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import StudentIdInput from '@/components/ui/student-id-input';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useRegisterUser } from '@/lib/mutations';
+import { validateStudentId } from '@/lib/studentIdValidation';
 
 const Logo = "/Logo/Logosvg.svg"
 
 
 
-const SignUpForm = ({head}) => {
+const getRoleFromHeading = (heading = '') => {
+    const value = heading.toLowerCase()
+    if (value.includes('student')) return 'student'
+    if (value.includes('agent')) return 'agent'
+    if (value.includes('artisan')) return 'artisan'
+    return 'student'
+}
+
+const normalizePhoneNumber = (value = '') => {
+    const cleaned = value.trim()
+    if (cleaned.startsWith('+234')) return cleaned
+    if (/^0\d{10}$/.test(cleaned)) return `+234${cleaned.slice(1)}`
+    return cleaned
+}
+
+const SignUpForm = ({head, role: roleProp}) => {
+    const router = useRouter()
+    const role = roleProp || getRoleFromHeading(head)
+    const { mutateAsync: registerUser, isPending } = useRegisterUser()
+
     const {
         register,
-        control,
         setValue,
         handleSubmit,
         watch,
         formState:{errors},
-    } = useForm();
+    } = useForm({
+        defaultValues: {
+            role,
+        },
+        mode: 'onTouched',
+        reValidateMode: 'onChange',
+    });
     
     const [studentIdValidation, setStudentIdValidation] = useState(null);
-    const isStudentSignup = head?.toLowerCase().includes('student');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const isStudentSignup = role === 'student';
     const studentIdValue = watch('studentIdNumber');
 
-    const handleRuns = (data) =>{
-        e.preventDefault();
-        console.log(data)
+    const handleSignUp = async (data) => {
+        if (isStudentSignup && !studentIdValidation?.isValid) {
+            return
+        }
+
+        const payload = {
+            first_name: data.fname.trim(),
+            last_name: data.lname.trim(),
+            email: data.email.trim().toLowerCase(),
+            phone_number: normalizePhoneNumber(data.phone),
+            role,
+            password: data.password,
+            password_confirm: data.confirmPassword,
+        }
+
+        if (isStudentSignup) {
+            payload.student_id_number = data.studentIdNumber?.trim()
+        }
+
+        try {
+            await registerUser(payload)
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('fhf-signup-email', payload.email)
+            }
+            router.push(`/auth/verify-otp?email=${encodeURIComponent(payload.email)}`)
+        } catch (error) {
+            // Temporary fallback requested: continue to OTP flow on backend 500.
+            if (error?.status === 500) {
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('fhf-signup-email', payload.email)
+                }
+                router.push(`/auth/verify-otp?email=${encodeURIComponent(payload.email)}`)
+            }
+        }
     }
 
   return (
@@ -60,79 +121,129 @@ const SignUpForm = ({head}) => {
                         <h3 className='sign-head text-center md:text-left'>Kindly fill your details</h3>
                     
 
-                        <form className="w-full " control={control} onSubmit={handleSubmit((data)=>handleSignUp(data))} >
+                        <form className="w-full " onSubmit={handleSubmit(handleSignUp)} >
                             <div className='w-full space-y-3 relative'>
 
                                 <div className='w-full'>
-                                    <label className='labels block text-sm text-black/70 pb-1'>First Name</label>
-                                    <input type={'text'} {...register("fname")}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.fname && 'border-red-500 '}`} placeholder='John'/>
+                                    <label className='labels block text-sm text-black/70 pb-1'>First Name *</label>
+                                    <input type={'text'} {...register("fname", { required: 'First name is required' })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.fname && 'border-red-500 '}`} placeholder='John'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.fname && 'pt-1'}`}>
-                                            {/* {errors.email?.message}  */}
+                                            {errors.fname?.message}
                                     </label>
                                 </div>
 
                                 <div className='w-full'>
-                                    <label className='labels block text-sm text-black/70 pb-1'>Last Name</label>
-                                    <input type={'text'} {...register("lname")}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.lname && 'border-red-500 '}`} placeholder='Doe'/>
+                                    <label className='labels block text-sm text-black/70 pb-1'>Last Name *</label>
+                                    <input type={'text'} {...register("lname", { required: 'Last name is required' })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.lname && 'border-red-500 '}`} placeholder='Doe'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.lname && 'pt-1'}`}>
-                                            {/* {errors.email?.message}  */}
+                                            {errors.lname?.message}
                                     </label>
                                 </div>
 
                                 <div className='w-full'>
-                                    <label className='labels block text-sm text-black/70 pb-1'>Email Address</label>
-                                    <input type={'email'} {...register("email")}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.email && 'border-red-500 '}`} placeholder='example@email.com'/>
+                                    <label className='labels block text-sm text-black/70 pb-1'>Email Address *</label>
+                                    <input type={'email'} {...register("email", {
+                                        required: 'Email is required',
+                                        pattern: {
+                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                            message: 'Enter a valid email address',
+                                        },
+                                    })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.email && 'border-red-500 '}`} placeholder='example@email.com'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.email && 'pt-1'}`}>
-                                            {/* {errors.email?.message}  */}
+                                            {errors.email?.message}
                                     </label>
                                 </div>
 
                                 <div className='w-full'>
-                                    <label className='labels block text-sm text-black/70 pb-1'>Phone Number</label>
-                                    <input type={'text'} {...register("phone")}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.phone && 'border-red-500 '}`} placeholder='08012345678'/>
+                                    <label className='labels block text-sm text-black/70 pb-1'>Phone Number *</label>
+                                    <input type={'text'} {...register("phone", {
+                                        required: 'Phone number is required',
+                                        pattern: {
+                                            value: /^(\+234\d{10}|0\d{10})$/,
+                                            message: 'Use +234XXXXXXXXXX or 0XXXXXXXXXX format',
+                                        },
+                                    })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.phone && 'border-red-500 '}`} placeholder='08012345678'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.phone && 'pt-1'}`}>
-                                            {/* {errors.phone?.message}  */}
+                                            {errors.phone?.message}
                                     </label>
                                 </div>
 
                                 {isStudentSignup && (
                                   <div className='w-full'>
-                                    <label className='labels block text-sm text-black/70 pb-1'>Student ID Number</label>
+                                    <label className='labels block text-sm text-black/70 pb-1'>Student ID Number *</label>
                                     <StudentIdInput
                                       value={studentIdValue || ''}
                                       onChange={(e) => {
-                                        setValue('studentIdNumber', e.target.value);
+                                        setValue('studentIdNumber', e.target.value, { shouldValidate: true });
                                       }}
                                       onValidationChange={setStudentIdValidation}
                                       placeholder="CYS/19/0575"
+                                      className='rounded-md border border-black/40 h-[2.8rem] px-3'
+                                      error={errors.studentIdNumber?.message}
+                                    />
+                                    <input
+                                      type="hidden"
+                                      {...register('studentIdNumber', {
+                                        required: isStudentSignup ? 'Student ID number is required' : false,
+                                        validate: (value) => {
+                                          if (!isStudentSignup) return true
+                                          const result = validateStudentId(value || '')
+                                          return result.isValid || result.error || 'Enter a valid student ID format'
+                                        },
+                                      })}
                                     />
                                   </div>
                                 )}
 
                                 <div className='w-full relative h-fit'>
-                                    <label className='labels block text-sm text-black/70 pb-1'>Password</label>
+                                    <label className='labels block text-sm text-black/70 pb-1'>Password *</label>
                                     <div className='relative'>
-                                        <input type={'password'} {...register("password")}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 relative  ${errors.password && 'border-red-500 '}`} placeholder='*******'/>
-                                        <FaEye className=' text-base right-3 top-[50%] -translate-y-[50%] text-lightGray absolute cursor-pointer'/>
+                                        <input type={showPassword ? 'text' : 'password'} {...register("password", {
+                                            required: 'Password is required',
+                                            pattern: {
+                                                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/,
+                                                message: 'Use 8+ chars, upper, lower, number, and special char',
+                                            },
+                                        })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 relative  ${errors.password && 'border-red-500 '}`} placeholder='*******'/>
+                                        <button
+                                          type='button'
+                                          onClick={() => setShowPassword((value) => !value)}
+                                          className='right-3 top-[50%] -translate-y-[50%] text-lightGray absolute cursor-pointer'
+                                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                        >
+                                          {showPassword ? <FaEyeSlash className='text-base' /> : <FaEye className='text-base' />}
+                                        </button>
                                     </div>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.password && 'pt-1'}`}>
-                                            {/* {errors.email?.message}  */}
+                                            {errors.password?.message}
                                     </label>
                                 </div>
 
                                 <div className='w-full relative h-fit'>
-                                    <label className='labels block text-sm text-black/70 pb-1 relative'>Confirm Password</label>
+                                    <label className='labels block text-sm text-black/70 pb-1 relative'>Confirm Password *</label>
                                     <div className='relative'>
-                                        <input type={'password'} {...register("password")}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 relative  ${errors.password && 'border-red-500 '}`} placeholder='*******'/>
-                                        <FaEye className=' text-base right-3 top-[50%] -translate-y-[50%] text-lightGray absolute cursor-pointer'/>
+                                        <input type={showConfirmPassword ? 'text' : 'password'} {...register("confirmPassword", {
+                                            required: 'Confirm your password',
+                                            validate: (value) => value === watch('password') || 'Passwords do not match',
+                                        })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 relative  ${errors.confirmPassword && 'border-red-500 '}`} placeholder='*******'/>
+                                        <button
+                                          type='button'
+                                          onClick={() => setShowConfirmPassword((value) => !value)}
+                                          className='right-3 top-[50%] -translate-y-[50%] text-lightGray absolute cursor-pointer'
+                                          aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                                        >
+                                          {showConfirmPassword ? <FaEyeSlash className='text-base' /> : <FaEye className='text-base' />}
+                                        </button>
                                     </div>
-                                    <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.password && 'pt-1'}`}>
-                                            {/* {errors.email?.message}  */}
+                                    <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.confirmPassword && 'pt-1'}`}>
+                                            {errors.confirmPassword?.message}
                                     </label>
                                 </div>
 
                                 <div className='pt-5'>
-                                    <Button className="text-white text-sm h-[2.8rem] font-medium bg-primary w-full rounded-full">Submit</Button>
+                                    <Button disabled={isPending} className="text-white text-sm h-[2.8rem] font-medium bg-primary w-full rounded-full">
+                                        {isPending ? 'Submitting...' : 'Submit'}
+                                    </Button>
                                 </div>
                             </div>
                         </form>

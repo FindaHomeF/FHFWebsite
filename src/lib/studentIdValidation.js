@@ -46,6 +46,13 @@ export const validateStudentId = (studentId) => {
     admissionYear = 2000 + yearNum
   }
 
+  if (admissionYear > currentYear) {
+    return {
+      isValid: false,
+      error: `Admission year cannot be beyond ${currentYear}`
+    }
+  }
+
   // Calculate years since admission
   const yearsSinceAdmission = currentYear - admissionYear
   

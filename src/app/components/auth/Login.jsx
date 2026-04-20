@@ -4,22 +4,60 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form'
 import { FaGoogle } from 'react-icons/fa';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useLoginUser, useRequestPasswordReset } from '@/lib/mutations';
 
 const Logo = "/Logo/Logosvg.svg"
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const Login = () => {
+    const router = useRouter()
+    const [showPassword, setShowPassword] = useState(false)
+    const { mutateAsync: login, isPending } = useLoginUser()
+    const { mutateAsync: requestReset, isPending: isRequestingReset } = useRequestPasswordReset()
+
     const {
         register,
-        control,
-        setValue,
         handleSubmit,
+        watch,
         formState:{errors},
-    } = useForm();
+    } = useForm({
+        mode: 'onTouched',
+        reValidateMode: 'onChange',
+        defaultValues: {
+            rememberMe: false,
+        },
+    });
 
-    const handleRuns = (data) =>{
-        e.preventDefault();
-        console.log(data)
+    const handleRuns = async (data) =>{
+        try {
+            await login({
+                email: data.email.trim().toLowerCase(),
+                password: data.password,
+                remember_me: Boolean(data.rememberMe),
+            })
+            router.push('/')
+        } catch {
+            // Error handled in mutation with toast.
+        }
     }
+
+    const handleForgotPassword = async () => {
+        const enteredEmail = emailValue?.trim().toLowerCase()
+        if (!enteredEmail) return
+        const isValidEmail = EMAIL_PATTERN.test(enteredEmail)
+        if (!isValidEmail) return
+
+        try {
+            await requestReset({ email: enteredEmail })
+        } catch {
+            // Error handled in mutation with toast.
+        }
+    }
+    const emailValue = watch('email')
+    const canRequestReset = Boolean(emailValue?.trim() && EMAIL_PATTERN.test(emailValue.trim()))
 
   return (
     <div className='w-full h-full flex-col flex-itc-juc'>
@@ -40,36 +78,59 @@ const Login = () => {
                     <p className='sign-para text-gray'>Continue with Find-a-Home FUTA</p>
                 </div>
  
-                <form className="w-full " control={control} onSubmit={handleSubmit((data)=>handleRuns(data))} >
+                <form className="w-full " onSubmit={handleSubmit(handleRuns)} >
                     <div className='w-full space-y-3'>
 
                         <div className='w-full'>
-                            <label className='labels block text-sm text-black/70 pb-1'>Email address or phone number*</label>
-                            <input type={'email'} {...register("email")}  className={`rounded-md border border-black/40 w-full h-[3rem] px-3  ${errors.email && 'border-red-500 '}`} placeholder='example@email.com'/>
+                            <label className='labels block text-sm text-black/70 pb-1'>Email address *</label>
+                            <input type={'email'} {...register("email", {
+                              required: 'Email is required',
+                              pattern: {
+                                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                message: 'Enter a valid email address',
+                              },
+                            })}  className={`rounded-md border border-black/40 w-full h-[3rem] px-3  ${errors.email && 'border-red-500 '}`} placeholder='example@email.com'/>
                             <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.email && 'pt-1'}`}>
-                                    {/* {errors.email?.message}  */}
+                                    {errors.email?.message}
                             </label>
                         </div>
 
                         <div className='w-full pt-5'>
                             <label className='labels block text-sm text-black/70 pb-1'>Password*</label>
-                            <input type={'password'} {...register("password")}  className={`rounded-md border border-black/40 w-full h-[3rem] px-3  ${errors.password && 'border-red-500 '}`} placeholder='*******'/>
+                            <div className='relative'>
+                                <input type={showPassword ? 'text' : 'password'} {...register("password", { required: 'Password is required' })}  className={`rounded-md border border-black/40 w-full h-[3rem] px-3  ${errors.password && 'border-red-500 '}`} placeholder='*******'/>
+                                <button
+                                  type='button'
+                                  onClick={() => setShowPassword((value) => !value)}
+                                  className='right-3 top-[50%] -translate-y-[50%] text-lightGray absolute cursor-pointer'
+                                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                  {showPassword ? <FaEyeSlash className='text-base' /> : <FaEye className='text-base' />}
+                                </button>
+                            </div>
                             <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.password && 'pt-1'}`}>
-                                    {/* {errors.email?.message}  */}
+                                    {errors.password?.message}
                             </label>
                         </div>
 
                         <div className='flex-itc-jub'>
                             <div>
                                 <div className='flex-itc gap-x-2'>
-                                    <input type="checkbox" name="" id="" className='cursor-pointer'/>
+                                    <input type="checkbox" {...register('rememberMe')} className='cursor-pointer'/>
                                     <h6 className='text-black/70 text-sm'>Remember Me</h6>
                                 </div>
 
                             </div>
 
                             <div className='cursor-pointer w-fit'>
-                                <h6 className='underline text-primary outline-offset-2 font-semibold text-sm'>Forgot Password?</h6>
+                                <button
+                                  type='button'
+                                  onClick={handleForgotPassword}
+                                  disabled={isRequestingReset || !canRequestReset}
+                                  className='underline text-primary outline-offset-2 font-semibold text-sm disabled:text-black/40 disabled:no-underline'
+                                >
+                                  {isRequestingReset ? 'Requesting...' : 'Forgot Password?'}
+                                </button>
                             </div>
                         </div>
                         
@@ -88,7 +149,9 @@ const Login = () => {
                         </div>
                         
                         <div className='pt-5 space-y-2'>
-                            <Button className="text-white text-sm h-[3rem] font-medium bg-primary w-full rounded-full">Sign In</Button>
+                            <Button disabled={isPending} className="text-white text-sm h-[3rem] font-medium bg-primary w-full rounded-full">
+                              {isPending ? 'Signing In...' : 'Sign In'}
+                            </Button>
                             <h6 className='text-center font-semibold text-sm md:hidden'>Don't have an account? <Link href={'/auth/signup/'}><span className='underline cursor-pointer outline-offset-2'>Sign Up</span></Link></h6>
                         </div>
                     </div>

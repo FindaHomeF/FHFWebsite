@@ -5,6 +5,7 @@ const Agent = () => {
     <div className="w-full">
         <SignUpForm
             head={'Sign Up as a Property Agent'}
+            role={'agent'}
         />
     </div>
   )
