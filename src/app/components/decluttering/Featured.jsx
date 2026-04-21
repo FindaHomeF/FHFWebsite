@@ -11,7 +11,7 @@ const Featured = () => {
         <div className="mx-auto w-[90%] max-w-full md:w-5/6 space-y-7 text-center">
             <div>
                 <h3 className="section-head text-center text-white">Hot Deals This Week</h3>
-                <p className="text-white/80 text-base md:text-lg mt-2">
+                <p className="text-white/80 text-base text-lighterGray md:text-lg mt-2">
                   Top picks from our marketplace. Quality items at unbeatable student prices.
                 </p>
             </div>

@@ -41,6 +41,10 @@ const ImageUpload = ({
       return true
     })
 
+    if (validFiles.length === 0) {
+      return
+    }
+
     if (multiple) {
       const newFiles = [...files, ...validFiles].slice(0, maxFiles)
       setFiles(newFiles)
@@ -127,10 +131,19 @@ const ImageUpload = ({
             ? 'border-primary bg-primary/5' 
             : 'border-black10 hover:border-gray-400'
         }`}
+        role="button"
+        tabIndex={0}
+        aria-label={multiple ? 'Upload listing images' : 'Upload listing image'}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={openFileDialog}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            openFileDialog()
+          }
+        }}
       >
         <input
           ref={fileInputRef}
@@ -170,6 +183,7 @@ const ImageUpload = ({
                   }}
                   className="text-blue-500 hover:text-blue-700 p-1"
                   title="Replace image"
+                  aria-label={`Replace image ${index + 1}`}
                 >
                   <Upload className="w-4 h-4" />
                 </button>
@@ -181,6 +195,7 @@ const ImageUpload = ({
                   }}
                   className="text-red-500 hover:text-red-700 p-1"
                   title="Remove image"
+                  aria-label={`Remove image ${index + 1}`}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -211,6 +226,7 @@ const ImageUpload = ({
                 }}
                 className="text-red-500 hover:text-red-700 p-1"
                 title="Remove image"
+                aria-label={`Remove uploaded image ${index + 1}`}
               >
                 <X className="w-4 h-4" />
               </button>

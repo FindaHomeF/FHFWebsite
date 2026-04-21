@@ -1,5 +1,5 @@
 'use client'
-import React, { memo, useState, useEffect } from 'react'
+import React, { memo, useState, useEffect, useMemo } from 'react'
 import { MoreHorizontal, Check, CheckSquare, Square, CheckCircle2, Trash2, Download, XCircle, Ban, Power, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
@@ -26,9 +26,17 @@ const AdminTableWithBulk = ({
   const [pendingAction, setPendingAction] = useState(null)
   const [selectAll, setSelectAll] = useState(false)
 
-  const currentItems = paginationData?.currentProperties || paginationData?.currentServices || 
-    paginationData?.currentUsers || paginationData?.currentItems || 
-    paginationData?.currentTransactions || data || []
+  const currentItems = useMemo(
+    () =>
+      paginationData?.currentProperties ||
+      paginationData?.currentServices ||
+      paginationData?.currentUsers ||
+      paginationData?.currentItems ||
+      paginationData?.currentTransactions ||
+      data ||
+      [],
+    [paginationData, data]
+  )
 
   const toggleItem = (itemId) => {
     setSelectedItems(prev => 
@@ -124,11 +132,22 @@ const AdminTableWithBulk = ({
           index % 2 === 0 ? 'bg-black10' : 'bg-white'
         } ${isSelected ? 'bg-blue-50' : ''}`}
         onClick={() => onRowClick && onRowClick(item)}
+        onKeyDown={(event) => {
+          if (!onRowClick) return
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onRowClick(item)
+          }
+        }}
+        tabIndex={0}
+        aria-label={`Open details for ${item?.title || item?.name || itemId}`}
       >
         <td className="py-3 px-6 w-12" onClick={(e) => e.stopPropagation()}>
           <button
+            type="button"
             onClick={() => toggleItem(itemId)}
             className="flex items-center justify-center"
+            aria-label={isSelected ? `Deselect ${item?.title || itemId}` : `Select ${item?.title || itemId}`}
           >
             {isSelected ? (
               <CheckSquare className="h-4 w-4 text-primary" />
@@ -168,11 +187,13 @@ const AdminTableWithBulk = ({
         
         {actionsColumn && (
           <td className="py-3 px-6 w-16" onClick={(e) => e.stopPropagation()}>
-            <button 
+            <button
+              type="button"
               className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
               onClick={(e) => {
                 e.stopPropagation()
               }}
+              aria-label={`More actions for ${item?.title || itemId}`}
             >
               <MoreHorizontal className="w-4 h-4 text-gray-600" />
             </button>
@@ -204,6 +225,7 @@ const AdminTableWithBulk = ({
                     onClick={() => handleBulkAction(action)}
                     className={isDangerous ? 'border-red-600 text-red-600 hover:bg-red-50' : ''}
                     title={getActionLabel(action)}
+                    aria-label={`${getActionLabel(action)} selected items`}
                   >
                     <Icon className="h-4 w-4" />
                   </Button>
@@ -236,7 +258,12 @@ const AdminTableWithBulk = ({
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 text-sm text-black66">
                 <th className="text-left py-4 px-6 font-semibold text-gray-700 w-12">
-                  <button onClick={toggleSelectAll} className="flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    className="flex items-center justify-center"
+                    aria-label={selectAll ? 'Deselect all rows' : 'Select all rows'}
+                  >
                     {selectAll ? (
                       <CheckSquare className="h-4 w-4 text-primary" />
                     ) : (
@@ -276,7 +303,8 @@ const AdminTableWithBulk = ({
       {/* Pagination */}
       <div className="mt-7 w-full px-6 pb-6">
         <div className="flex-itc-jub space-x-2">
-          <button 
+          <button
+            type="button"
             onClick={handlePrevious}
             disabled={currentPage === 1}
             className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black33 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -290,6 +318,7 @@ const AdminTableWithBulk = ({
                 <span key={index} className="px-2 text-gray-500">...</span>
               ) : (
                 <button
+                  type="button"
                   key={index}
                   onClick={() => handlePageChange(page)}
                   className={`w-8 h-8 text-sm font-medium rounded-lg flex items-center justify-center transition-colors ${
@@ -304,7 +333,8 @@ const AdminTableWithBulk = ({
             ))}
           </div>
           
-          <button 
+          <button
+            type="button"
             onClick={handleNext}
             disabled={currentPage === paginationData.totalPages}
             className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black33 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"

@@ -62,7 +62,7 @@ export default function RecentActivity() {
         ))}
       </div>
       <div className="mt-4 pt-4 border-t border-gray-200">
-        <button className="text-sm text-primary hover:text-primary-dark font-medium">
+        <button type="button" className="text-sm text-primary hover:text-primary-dark font-medium">
           View all activity
         </button>
       </div>

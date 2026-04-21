@@ -20,8 +20,8 @@ const Categories = () => {
 
   return (
     <div>
-        <div className='mt-12 w-[90%] max-w-full mx-auto'>
-          <div>
+        <div className='mt-12 w-[90%] max-w-full mx-auto space-y-7'>
+          <div className=''>
             <h3 className='font-semibold text-center mt-12 md:mt-16 
             text-2xl md:text-4xl lg:text-[40px]'>
             Categories

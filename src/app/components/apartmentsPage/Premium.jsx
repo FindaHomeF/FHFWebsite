@@ -14,7 +14,7 @@ const Premium = () => {
         <div className="mx-auto w-[90%] max-w-full md:w-5/6 space-y-7 text-center">
             <div>
                 <h3 className="section-head text-center text-white">Premium Student Living</h3>
-                <p className="text-gray-light text-base md:text-lg mt-2">
+                <p className="text-lighterGray text-base md:text-lg mt-2">
                   Top-rated apartments designed for students who want the best. Fully furnished, modern amenities, and prime locations.
                 </p>
             </div>
@@ -27,7 +27,7 @@ const Premium = () => {
             </CardScroll>
             <div className="mx-auto w-full flex justify-center items-center mt-5 md:mt-12">
                 <SeeAll 
-                    whiteBorder
+                    border="white"
                     cta="/apartments/all"
                     filterType="featured"
                 />

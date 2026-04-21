@@ -18,6 +18,7 @@ export default {
 			primary: 'var(--primary)',
 			primaryOpacity: 'var(--primary-opacity)',
 			primaryHover: 'var(--primary-hover)',
+			'primary-dark': 'var(--primary-dark)',
 			
 			// Secondary Colors
 			secondary: 'var(--secondary)',
