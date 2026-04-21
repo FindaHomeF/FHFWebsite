@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import AdminTable from '@/app/admin/components/AdminTable';
 
 const SubAdminsPage = () => {
@@ -93,6 +94,7 @@ const SubAdminsPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const itemsPerPage = 10;
 
   // Load from localStorage
@@ -178,6 +180,13 @@ const SubAdminsPage = () => {
     
     return pages
   }, [currentPage, paginationData.totalPages])
+
+  const clearFilters = useCallback(() => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setRoleFilter('all')
+    setCurrentPage(1)
+  }, [])
 
   const columns = [
     {
@@ -272,7 +281,7 @@ const SubAdminsPage = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="flex items-center justify-between gap-4">
           {/* Search */}
-          <div className="flex-1 max-w-md">
+          <div className="flex-1 max-w-md hidden md:block">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
@@ -288,7 +297,7 @@ const SubAdminsPage = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             <Select value={statusFilter} onValueChange={(value) => {
               setStatusFilter(value)
               setCurrentPage(1)
@@ -323,12 +332,7 @@ const SubAdminsPage = () => {
 
             <Button
               variant="outline"
-              onClick={() => {
-                setSearchTerm('')
-                setStatusFilter('all')
-                setRoleFilter('all')
-                setCurrentPage(1)
-              }}
+              onClick={clearFilters}
               className="flex-shrink-0"
             >
               <Filter className="w-4 h-4 mr-2" />
@@ -342,6 +346,78 @@ const SubAdminsPage = () => {
               <Download className="w-4 h-4 mr-2" />
               Download
             </Button>
+          </div>
+
+          <div className="md:hidden">
+            <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+              <SheetTrigger asChild>
+                <Button type="button" variant="outline" className="rounded-lg flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[88%] sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Filter Sub-Admins</SheetTitle>
+                  <SheetDescription>Use search and filters to narrow sub-admin records.</SheetDescription>
+                </SheetHeader>
+                <div className="mt-6 space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search by name, email, or phone..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value)
+                        setCurrentPage(1)
+                      }}
+                      className="pl-10"
+                    />
+                  </div>
+
+                  <Select value={statusFilter} onValueChange={(value) => {
+                    setStatusFilter(value)
+                    setCurrentPage(1)
+                  }}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Filter by Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={roleFilter} onValueChange={(value) => {
+                    setRoleFilter(value)
+                    setCurrentPage(1)
+                  }}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Filter by Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
+                      <SelectItem value="super-admin">Super Admin</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="moderator">Moderator</SelectItem>
+                      <SelectItem value="support">Support</SelectItem>
+                      <SelectItem value="analyst">Analyst</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <div className="pt-3 flex gap-2">
+                    <Button type="button" variant="outline" className="flex-1" onClick={clearFilters}>
+                      Clear
+                    </Button>
+                    <Button type="button" className="flex-1" onClick={() => setIsMobileFiltersOpen(false)}>
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

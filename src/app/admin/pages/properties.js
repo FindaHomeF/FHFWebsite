@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import AdminTableWithBulk from '../components/AdminTableWithBulk'
 
 // Mock data to match the image
@@ -128,6 +129,7 @@ export default function PropertiesPage() {
   const [dateFilter, setDateFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -310,20 +312,28 @@ export default function PropertiesPage() {
     // Add your bulk action logic here
   }, [])
 
+  const clearFilters = useCallback(() => {
+    setDateFilter('all')
+    setCategoryFilter('all')
+    setStatusFilter('all')
+    setCurrentPage(1)
+  }, [])
+
 
   return (
     <div className="space-y-6 px-6">
       <div className="bg-white ">
           <div className=" py-6">
             {/* Filters Row */}
-            <div className='flex-itc-jub'>
-              <div className="flex justify-between items-center">
+            <div className='flex-itc-jub !block md:!flex'>
+              <div className="flex justify-between items-center pb-5 md:pb-0">
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">Property Listings</h1>
                 </div>
               </div>
 
-              <div className="flex flex-wra items-center gap-1.5 !text-sm">
+              <div className="flex flex-wrap md:flex-nowrap items-center gap-1.5 justify-between md:justify-start !text-sm">
+                <div className="hidden md:flex items-center gap-1.5 !text-sm">
                 <Select value={dateFilter} onValueChange={(value) => handleFilterChange('date', value)}>
                   <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
                     <SelectValue placeholder="Date" />
@@ -376,6 +386,70 @@ export default function PropertiesPage() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                </div>
+
+                <div className="md:hidden">
+                  <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+                    <SheetTrigger asChild>
+                      <Button type="button" variant="outline" className="rounded-lg flex items-center gap-2">
+                        <Filter className="w-4 h-4" />
+                        Filters
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-[88%] sm:max-w-md overflow-y-auto">
+                      <SheetHeader>
+                        <SheetTitle>Filter Properties</SheetTitle>
+                        <SheetDescription>Apply filters to narrow property listings.</SheetDescription>
+                      </SheetHeader>
+                      <div className="mt-6 space-y-4">
+                        <Select value={dateFilter} onValueChange={(value) => handleFilterChange('date', value)}>
+                          <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                            <SelectValue placeholder="Date" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Date</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="week">This Week</SelectItem>
+                            <SelectItem value="month">This Month</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Select value={categoryFilter} onValueChange={(value) => handleFilterChange('category', value)}>
+                          <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                            <SelectValue placeholder="All Category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Category</SelectItem>
+                            <SelectItem value="flat">Flat</SelectItem>
+                            <SelectItem value="single">Single Room</SelectItem>
+                            <SelectItem value="shared">Shared Apartment</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Select value={statusFilter} onValueChange={(value) => handleFilterChange('status', value)}>
+                          <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                            <SelectValue placeholder="All Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <div className="pt-3 flex gap-2">
+                          <Button type="button" variant="outline" className="flex-1" onClick={clearFilters}>
+                            Clear
+                          </Button>
+                          <Button type="button" className="flex-1" onClick={() => setIsMobileFiltersOpen(false)}>
+                            Apply
+                          </Button>
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                </div>
 
                 <Button 
                   className="bg-primary text-white rounded-lg px-6 py-6"

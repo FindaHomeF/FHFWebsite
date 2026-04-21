@@ -7,7 +7,7 @@ const Hero = ({placeholder, mainText, subText, btn1, btn2, cta1='#', cta2='#'}) 
   return (
     <div className="w-full">
         <div className="w-[90%] mx-auto md:w-4/6 text-center space-y-3 md:space-y-5 mt-10 md:mt-0">
-            <h2 className="hero-head px-10">{mainText}</h2>
+            <h2 className="hero-head px-3 md:px-10">{mainText}</h2>
             <p className="hero-para text-graySec pb-3 md:pb-0">{subText}</p>
 
             <div className="hero-btns h-10 md:h-12 w-[90%] md:w-3/6 mx-auto flex gap-x-3">

@@ -17,7 +17,14 @@ export default function AllDeclutteredItemsPage() {
       
       {/* Hero Section */}
       <div className="mt-10 md:mt-0">
-        <HeroSection showScrollDownButton={false} />
+        <HeroSection
+          showScrollDownButton={false}
+          mainText="Declutter & Find Essentials"
+          subText="Sell items you no longer need and discover affordable pre-owned essentials from trusted FUTA students."
+          primaryButtonText="LIST AN ITEM"
+          secondaryButtonText="BROWSE CATEGORIES"
+          secondaryCta="/decluttering#categories"
+        />
       </div>
 
       {/* Filter and Grid Wrapper - Client Component with Suspense */}

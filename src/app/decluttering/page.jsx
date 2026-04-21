@@ -15,9 +15,9 @@ const page = () => {
         <main className="space-y-16 md:space-y-20 pt-3 md:pt-16">
             <Hero
                 placeholder={'Search furniture, appliances, books, and more...'}
-                mainText={'Student Marketplace'}
-                subText={'Buy quality pre-owned items or sell what you don\'t need. Save money, help the environment, connect with fellow students.'}
-                btn1={'Sell Your Items'}
+                mainText={'Declutter & Find Essentials'}
+                subText={'Sell items you no longer need and discover affordable pre-owned essentials from trusted FUTA students.'}
+                btn1={'List an Item'}
                 btn2={'Browse Categories'}  
                 cta2='#categories'
             />

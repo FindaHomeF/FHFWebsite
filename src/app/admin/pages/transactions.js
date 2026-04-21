@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import AdminTableWithBulk from '../components/AdminTableWithBulk'
 import StatsCard from '../components/StatsCard'
 import { DollarSign, CreditCard, Clock, XCircle } from 'lucide-react'
@@ -114,6 +115,7 @@ const TransactionsPage = () => {
   const [dateFilter, setDateFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   // Mock statistics
   const stats = useMemo(() => ({
@@ -225,10 +227,19 @@ const TransactionsPage = () => {
     // Add your bulk action logic here
   }, []);
 
+  const clearFilters = useCallback(() => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setTypeFilter('all')
+    setMethodFilter('all')
+    setDateFilter('all')
+    setCurrentPage(1)
+  }, [])
+
   return (
-    <div className="space-y-6 px-6 pb-12">
+    <div className="space-y-6 px-6 pb-12 pt-6">
             {/* Stats Cards */}
-            <div className="inline-grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-auto max-w-full">
+            <div className="inline-grid min-w-full md:min-w-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-auto max-w-full">
                 <StatsCard
                 title="Total Revenue"
                 value={stats.totalRevenue}
@@ -260,112 +271,216 @@ const TransactionsPage = () => {
             </div>
 
             {/* Page Header */}
-            <div className="bg-white">
+            <div className="bg-white pt-10 md:pt-0">
                 <div className='flex-itc-jub'>
-                <div className="flex-shrink-0">
-                    <h1 className="text-xl font-bold text-gray-900">Transactions</h1>
-                </div>
+                  <div className="flex-shrink-0">
+                      <h1 className="text-xl font-bold text-gray-900">Transactions</h1>
+                  </div>
 
-                {/* Search and Filters */}
-                <div className="flex items-center gap-1.5 !text-sm">
-                    <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
-                    <Input
-                        placeholder="Search transactions..."
-                        value={searchTerm}
-                        onChange={(e) => {
-                        setSearchTerm(e.target.value)
-                        setCurrentPage(1)
-                        }}
-                        className="pl-10 border-black10 border w-48"
-                    />
-                    </div>
+                  {/* Search and Filters */}
+                  <div className="hidden md:flex items-center gap-1.5 !text-sm">
+                      <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
+                      <Input
+                          placeholder="Search transactions..."
+                          value={searchTerm}
+                          onChange={(e) => {
+                          setSearchTerm(e.target.value)
+                          setCurrentPage(1)
+                          }}
+                          className="pl-10 border-black10 border w-48"
+                      />
+                      </div>
 
-                    <Select value={dateFilter} onValueChange={(value) => {
-                    setDateFilter(value)
-                    setCurrentPage(1)
-                    }}>
-                    <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
-                        <SelectValue placeholder="Date" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Date</SelectItem>
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="week">This Week</SelectItem>
-                        <SelectItem value="month">This Month</SelectItem>
-                    </SelectContent>
-                    </Select>
+                      <Select value={dateFilter} onValueChange={(value) => {
+                      setDateFilter(value)
+                      setCurrentPage(1)
+                      }}>
+                      <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
+                          <SelectValue placeholder="Date" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">All Date</SelectItem>
+                          <SelectItem value="today">Today</SelectItem>
+                          <SelectItem value="week">This Week</SelectItem>
+                          <SelectItem value="month">This Month</SelectItem>
+                      </SelectContent>
+                      </Select>
 
-                    <Select value={typeFilter} onValueChange={(value) => {
-                    setTypeFilter(value)
-                    setCurrentPage(1)
-                    }}>
-                    <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
-                        <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Type</SelectItem>
-                        <SelectItem value="Service Payment">Service Payment</SelectItem>
-                        <SelectItem value="Subscription">Subscription</SelectItem>
-                    </SelectContent>
-                    </Select>
+                      <Select value={typeFilter} onValueChange={(value) => {
+                      setTypeFilter(value)
+                      setCurrentPage(1)
+                      }}>
+                      <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
+                          <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">All Type</SelectItem>
+                          <SelectItem value="Service Payment">Service Payment</SelectItem>
+                          <SelectItem value="Subscription">Subscription</SelectItem>
+                      </SelectContent>
+                      </Select>
 
-                    <Select value={methodFilter} onValueChange={(value) => {
-                    setMethodFilter(value)
-                    setCurrentPage(1)
-                    }}>
-                    <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
-                        <SelectValue placeholder="Method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Method</SelectItem>
-                        <SelectItem value="Card">Card</SelectItem>
-                        <SelectItem value="Transfer">Transfer</SelectItem>
-                        <SelectItem value="Wallet">Wallet</SelectItem>
-                    </SelectContent>
-                    </Select>
+                      <Select value={methodFilter} onValueChange={(value) => {
+                      setMethodFilter(value)
+                      setCurrentPage(1)
+                      }}>
+                      <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
+                          <SelectValue placeholder="Method" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">All Method</SelectItem>
+                          <SelectItem value="Card">Card</SelectItem>
+                          <SelectItem value="Transfer">Transfer</SelectItem>
+                          <SelectItem value="Wallet">Wallet</SelectItem>
+                      </SelectContent>
+                      </Select>
 
-                    <Select value={statusFilter} onValueChange={(value) => {
-                    setStatusFilter(value)
-                    setCurrentPage(1)
-                    }}>
-                    <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Failed">Failed</SelectItem>
-                    </SelectContent>
-                    </Select>
+                      <Select value={statusFilter} onValueChange={(value) => {
+                      setStatusFilter(value)
+                      setCurrentPage(1)
+                      }}>
+                      <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
+                          <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="Pending">Pending</SelectItem>
+                          <SelectItem value="Failed">Failed</SelectItem>
+                      </SelectContent>
+                      </Select>
 
-                    <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-32 bg-black10 border-none shadow-none rounded-lg flex items-center gap-2">
-                        <Filter className="w-4 h-4" />
-                        More
+                      <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="w-32 bg-black10 border-none shadow-none rounded-lg flex items-center gap-2">
+                          <Filter className="w-4 h-4" />
+                          More
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                          <DropdownMenuItem onClick={clearFilters}>
+                          <Filter className="w-4 h-4 mr-2" />
+                          Clear Filters
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => document.getElementById('download')?.click()}>
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                      </DropdownMenu>
+                  </div>
+
+                  <div className="md:hidden">
+                    <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+                      <SheetTrigger asChild>
+                        <Button type="button" variant="outline" className="rounded-lg flex items-center gap-2">
+                          <Filter className="w-4 h-4" />
+                          Filters
                         </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onClick={() => {
-                        setSearchTerm('')
-                        setStatusFilter('all')
-                        setTypeFilter('all')
-                        setMethodFilter('all')
-                        setDateFilter('all')
-                        setCurrentPage(1)
-                        }}>
-                        <Filter className="w-4 h-4 mr-2" />
-                        Clear Filters
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => document.getElementById('download')?.click()}>
-                        <Download className="w-4 h-4 mr-2" />
-                        Download
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                      </SheetTrigger>
+                      <SheetContent side="right" className="w-[88%] sm:max-w-md overflow-y-auto">
+                        <SheetHeader>
+                          <SheetTitle>Filter Transactions</SheetTitle>
+                          <SheetDescription>
+                            Use filters to narrow transaction results quickly.
+                          </SheetDescription>
+                        </SheetHeader>
+
+                        <div className="mt-6 space-y-4">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
+                            <Input
+                              placeholder="Search transactions..."
+                              value={searchTerm}
+                              onChange={(e) => {
+                                setSearchTerm(e.target.value)
+                                setCurrentPage(1)
+                              }}
+                              className="pl-10 border-black10 border w-full"
+                            />
+                          </div>
+
+                          <Select value={dateFilter} onValueChange={(value) => {
+                            setDateFilter(value)
+                            setCurrentPage(1)
+                          }}>
+                            <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                              <SelectValue placeholder="Date" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Date</SelectItem>
+                              <SelectItem value="today">Today</SelectItem>
+                              <SelectItem value="week">This Week</SelectItem>
+                              <SelectItem value="month">This Month</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Select value={typeFilter} onValueChange={(value) => {
+                            setTypeFilter(value)
+                            setCurrentPage(1)
+                          }}>
+                            <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                              <SelectValue placeholder="Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Type</SelectItem>
+                              <SelectItem value="Service Payment">Service Payment</SelectItem>
+                              <SelectItem value="Subscription">Subscription</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Select value={methodFilter} onValueChange={(value) => {
+                            setMethodFilter(value)
+                            setCurrentPage(1)
+                          }}>
+                            <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                              <SelectValue placeholder="Method" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Method</SelectItem>
+                              <SelectItem value="Card">Card</SelectItem>
+                              <SelectItem value="Transfer">Transfer</SelectItem>
+                              <SelectItem value="Wallet">Wallet</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Select value={statusFilter} onValueChange={(value) => {
+                            setStatusFilter(value)
+                            setCurrentPage(1)
+                          }}>
+                            <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Status</SelectItem>
+                              <SelectItem value="Completed">Completed</SelectItem>
+                              <SelectItem value="Pending">Pending</SelectItem>
+                              <SelectItem value="Failed">Failed</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <div className="pt-3 flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={clearFilters}
+                            >
+                              Clear
+                            </Button>
+                            <Button
+                              type="button"
+                              className="flex-1"
+                              onClick={() => setIsMobileFiltersOpen(false)}
+                            >
+                              Apply
+                            </Button>
+                          </div>
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+                  </div>
                 </div>
             </div>
 

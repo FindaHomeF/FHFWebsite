@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import AdminTableWithBulk from '../components/AdminTableWithBulk'
 import { useRouter } from 'next/navigation'
 
@@ -110,6 +111,7 @@ const UsersPage = () => {
   const [roleFilter, setRoleFilter] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   // Get users from localStorage or use mock data
   const [users, setUsers] = useState(mockUsers)
@@ -171,6 +173,13 @@ const UsersPage = () => {
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
     // Add your bulk action logic here
+  }, [])
+
+  const clearFilters = useCallback(() => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setRoleFilter('all')
+    setCurrentPage(1)
   }, [])
 
   const handlePageChange = useCallback((page) => {
@@ -285,14 +294,15 @@ const UsersPage = () => {
   return (
     <div className="space-y-6 px-6 pb-12">
       {/* Page Header */}
-      <div className="bg-white py-6">
-        <div className='flex-itc-jub'>
-          <div className="flex-shrink-0">
+      <div className="bg-white pt-6">
+        <div className='flex-itc-jub !block md:!flex'>
+          <div className="flex-shrink-0 pb-5 md:pb-0">
             <h1 className="text-xl font-bold text-gray-900">User Management</h1>
           </div>
 
           {/* Search and Filters */}
-          <div className="flex items-center gap-1.5 !text-sm">
+          <div className="flex items-center gap-1.5 justify-between md:justify-start !text-sm">
+            <div className="hidden md:flex items-center gap-1.5 !text-sm">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
               <Input
@@ -348,12 +358,7 @@ const UsersPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => {
-                  setSearchTerm('')
-                  setStatusFilter('all')
-                  setRoleFilter('all')
-                  setCurrentPage(1)
-                }}>
+                <DropdownMenuItem onClick={clearFilters}>
                   <Filter className="w-4 h-4 mr-2" />
                   Clear Filters
                 </DropdownMenuItem>
@@ -363,6 +368,79 @@ const UsersPage = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
+
+            <div className="md:hidden">
+              <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button type="button" variant="outline" className="rounded-lg flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[88%] sm:max-w-md overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Filter Users</SheetTitle>
+                    <SheetDescription>Refine the users list using search and filter options.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
+                      <Input
+                        placeholder="Search users..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value)
+                          setCurrentPage(1)
+                        }}
+                        className="pl-10 border-black10 border w-full"
+                      />
+                    </div>
+                    <Select value={statusFilter} onValueChange={(value) => {
+                      setStatusFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Suspended">Suspended</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={roleFilter} onValueChange={(value) => {
+                      setRoleFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                        <SelectValue placeholder="Role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Roles</SelectItem>
+                        <SelectItem value="student">Student</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="artisan">Artisan</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="moderator">Moderator</SelectItem>
+                        <SelectItem value="support">Support</SelectItem>
+                        <SelectItem value="analyst">Analyst</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="pt-3 flex gap-2">
+                      <Button type="button" variant="outline" className="flex-1" onClick={clearFilters}>
+                        Clear
+                      </Button>
+                      <Button type="button" className="flex-1" onClick={() => setIsMobileFiltersOpen(false)}>
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
 
             <Button 
               className="bg-primary text-white rounded-lg px-6 py-6"

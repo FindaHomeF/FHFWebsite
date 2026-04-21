@@ -65,7 +65,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="h-full overflow-y-auto px-6">  
+    <div className="h-full overflow-y-auto px-6 pt-6">  
       <div className="space-y-6 mb-14">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

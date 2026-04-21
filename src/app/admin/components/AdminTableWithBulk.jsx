@@ -122,6 +122,16 @@ const AdminTableWithBulk = ({
     return `Are you sure you want to ${normalizedAction} ${count} item(s)?`
   }
 
+  const mobilePageNumbers = useMemo(() => {
+    const totalPages = paginationData?.totalPages || 1
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1)
+    }
+    if (currentPage <= 2) return [1, 2, '...', totalPages]
+    if (currentPage >= totalPages - 1) return [1, '...', totalPages - 1, totalPages]
+    return [1, '...', currentPage, '...', totalPages]
+  }, [currentPage, paginationData?.totalPages])
+
   const TableRow = memo(({ item, index }) => {
     const itemId = item.id || item._id
     const isSelected = selectedItems.includes(itemId)
@@ -142,7 +152,7 @@ const AdminTableWithBulk = ({
         tabIndex={0}
         aria-label={`Open details for ${item?.title || item?.name || itemId}`}
       >
-        <td className="py-3 px-6 w-12" onClick={(e) => e.stopPropagation()}>
+        <td className="py-2 px-3 md:py-3 md:px-6 w-12" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
             onClick={() => toggleItem(itemId)}
@@ -161,7 +171,7 @@ const AdminTableWithBulk = ({
           
           if (column.render) {
             return (
-              <td key={column.key} className={`py-3 px-6 ${column.width || ''}`}>
+              <td key={column.key} className={`py-2 px-3 md:py-3 md:px-6 ${column.width || ''}`}>
                 {column.render(item)}
               </td>
             )
@@ -169,7 +179,7 @@ const AdminTableWithBulk = ({
           
           if (column.key === 'status' && item.status) {
             return (
-              <td key={column.key} className={`py-3 px-6 ${column.width || ''}`}>
+              <td key={column.key} className={`py-2 px-3 md:py-3 md:px-6 ${column.width || ''}`}>
                 {getStatusBadge(item.status)}
               </td>
             )
@@ -178,7 +188,7 @@ const AdminTableWithBulk = ({
           return (
             <td 
               key={column.key} 
-              className={`py-3 px-6 text-gray-800 ${column.width || ''} ${column.truncate ? 'truncate' : ''} ${column.fontMedium ? 'font-medium' : ''}`}
+              className={`py-2 px-3 md:py-3 md:px-6 text-gray-800 ${column.width || ''} ${column.truncate ? 'truncate' : ''} ${column.fontMedium ? 'font-medium' : ''}`}
             >
               {cellValue}
             </td>
@@ -186,7 +196,7 @@ const AdminTableWithBulk = ({
         })}
         
         {actionsColumn && (
-          <td className="py-3 px-6 w-16" onClick={(e) => e.stopPropagation()}>
+          <td className="py-2 px-3 md:py-3 md:px-6 w-16" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
@@ -209,7 +219,7 @@ const AdminTableWithBulk = ({
       {selectedItems.length > 0 ? (<div className="bg-primary/10  rounded-lg p-4 mb-4 flex items-center justify-between min-h-[60px]">
             <div className="flex items-center gap-2">
               {/* <CheckSquare className="h-5 w-5 text-primary" /> */}
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-xs md:text-base text-gray-900">
                 {selectedItems.length} item(s) selected
               </span>
             </div>
@@ -252,12 +262,12 @@ const AdminTableWithBulk = ({
           </div>
       )}
 
-      <div className="overflow-hidden shadow-sm rounded-lg relative h-[25rem]">
+      <div className="overflow-hidden shadow-sm rounded-lg relative min-h-[max-content] h-[18rem] md:h-[25rem]">
         <div className="overflow-y-auto">
           <table key={currentPage} className="w-full table-fixed">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 text-sm text-black66">
-                <th className="text-left py-4 px-6 font-semibold text-gray-700 w-12">
+                <th className="text-left py-2 px-3 md:py-4 md:px-6 font-semibold text-gray-700 w-12">
                   <button
                     type="button"
                     onClick={toggleSelectAll}
@@ -274,13 +284,13 @@ const AdminTableWithBulk = ({
                 {columns.map((column) => (
                   <th 
                     key={column.key}
-                    className={`text-left py-4 px-6 font-semibold text-gray-700 ${column.width || ''}`}
+                    className={`text-left py-2 px-3 md:py-4 md:px-6 font-semibold text-gray-700 ${column.width || ''}`}
                   >
                     {column.label}
                   </th>
                 ))}
                 {actionsColumn && (
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700 w-16"></th>
+                  <th className="text-left py-2 px-3 md:py-4 md:px-6 font-semibold text-gray-700 w-16"></th>
                 )}
               </tr>
             </thead>
@@ -295,14 +305,15 @@ const AdminTableWithBulk = ({
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-black66 py-3 text-right px-6">
-          Showing {paginationData.startIndex + 1}-{Math.min(paginationData.endIndex, paginationData.totalItems)} of {paginationData.totalItems} items
-        </p>
       </div>
+
+      <p className="text-xs text-black66 py-3 text-right px-6">
+        Showing {paginationData.startIndex + 1}-{Math.min(paginationData.endIndex, paginationData.totalItems)} of {paginationData.totalItems} items
+      </p>
 
       {/* Pagination */}
       <div className="mt-7 w-full px-6 pb-6">
-        <div className="flex-itc-jub space-x-2">
+        <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={handlePrevious}
@@ -312,7 +323,7 @@ const AdminTableWithBulk = ({
             Previous
           </button>
           
-          <div className="flex items-center gap-x-2">
+          <div className="hidden md:flex items-center gap-x-2">
             {pageNumbers.map((page, index) => (
               page === '...' ? (
                 <span key={index} className="px-2 text-gray-500">...</span>
@@ -322,6 +333,27 @@ const AdminTableWithBulk = ({
                   key={index}
                   onClick={() => handlePageChange(page)}
                   className={`w-8 h-8 text-sm font-medium rounded-lg flex items-center justify-center transition-colors ${
+                    page === currentPage
+                      ? 'bg-primary text-white'
+                      : 'text-gray-500 bg-white border border-black33 hover:bg-gray-50 hover:text-gray-700'
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            ))}
+          </div>
+
+          <div className="flex md:hidden items-center gap-x-1">
+            {mobilePageNumbers.map((page, index) => (
+              page === '...' ? (
+                <span key={`mobile-ellipsis-${index}`} className="px-1 text-gray-500">...</span>
+              ) : (
+                <button
+                  type="button"
+                  key={`mobile-page-${page}`}
+                  onClick={() => handlePageChange(page)}
+                  className={`min-w-8 h-8 px-2 text-xs font-medium rounded-lg flex items-center justify-center transition-colors ${
                     page === currentPage
                       ? 'bg-primary text-white'
                       : 'text-gray-500 bg-white border border-black33 hover:bg-gray-50 hover:text-gray-700'

@@ -112,7 +112,7 @@ export default function AgentPaymentsPage() {
 
       {/* Payments List */}
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-6">
+        <div className="">
           <h2 className="text-lg font-semibold mb-4">Transaction History</h2>
           
           {filteredPayments.length === 0 ? (
@@ -130,7 +130,7 @@ export default function AgentPaymentsPage() {
                         <h4 className="font-semibold text-lg">
                           {payment.propertyTitle || payment.itemTitle}
                         </h4>
-                        <Badge className={payment.status === 'pending' ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'}>
+                        <Badge className={`${payment.status === 'pending' ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'} hidden md:inline-flex`}>
                           {payment.status === 'pending' ? 'Pending' : 'Completed'}
                         </Badge>
                       </div>
@@ -151,13 +151,21 @@ export default function AgentPaymentsPage() {
                         </p>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">
-                        ₦{payment.amount.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(payment.createdAt).toLocaleDateString()}
-                      </p>
+                    <div className="text-right flex flex-col justify-between items-end min-h-full">
+                      <Badge className={`${payment.status === 'pending' ? 'bg-orange-500 text-white' : 'bg-green-500 text-white'} inline-flex md:hidden`}>
+                        {payment.status === 'pending' ? 'Pending' : 'Completed'}
+                      </Badge>
+
+                      <div className='mt-7'>
+                        <p className="text-2xl font-bold text-primary">
+                          ₦{payment.amount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(payment.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      
+                      
                     </div>
                   </div>
                 </div>

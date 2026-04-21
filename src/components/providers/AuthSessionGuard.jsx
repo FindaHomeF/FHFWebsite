@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
-const DISABLE_ROUTE_PROTECTION = false
+const DISABLE_ROUTE_PROTECTION = true
 
 const PROTECTED_PREFIXES = ['/admin', '/student', '/agent', '/artisan', '/settings']
 
