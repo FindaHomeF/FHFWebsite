@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useId } from 'react'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { useRouter } from 'next/navigation'
@@ -19,13 +19,9 @@ const PremiumToggle = ({
   redirectToPayment = true
 }) => {
   const router = useRouter()
+  const premiumToggleId = useId()
   const [isPremium, setIsPremium] = useState(currentPremium)
   const [isExpired, setIsExpired] = useState(false)
-
-  // Don't show premium option for admin
-  if (isAdmin) {
-    return null
-  }
 
   useEffect(() => {
     if (premiumExpiry) {
@@ -69,17 +65,22 @@ const PremiumToggle = ({
 
   const status = getPremiumStatus()
 
+  // Don't show premium option for admin
+  if (isAdmin) {
+    return null
+  }
+
   return (
     <div className={`border rounded-lg p-4 ${status.bg} ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Crown className={`w-5 h-5 ${status.color}`} />
-          <Label htmlFor="premium-toggle" className="font-semibold text-gray-900">
+          <Label htmlFor={premiumToggleId} className="font-semibold text-gray-900">
             Premium Listing
           </Label>
         </div>
         <Switch
-          id="premium-toggle"
+          id={premiumToggleId}
           checked={isPremium && !isExpired}
           onCheckedChange={handleToggle}
           disabled={isPremium && !isExpired && !onToggle}

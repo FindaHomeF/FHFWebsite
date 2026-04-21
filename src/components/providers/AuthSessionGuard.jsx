@@ -3,6 +3,8 @@
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
+const DISABLE_ROUTE_PROTECTION = false
+
 const PROTECTED_PREFIXES = ['/admin', '/student', '/agent', '/artisan', '/settings']
 
 const hasAuthSession = () => {
@@ -20,6 +22,8 @@ const AuthSessionGuard = () => {
   const router = useRouter()
 
   useEffect(() => {
+    if (DISABLE_ROUTE_PROTECTION) return
+
     const enforceSession = () => {
       if (!pathname || !isProtectedPath(pathname)) return
       if (!hasAuthSession()) {

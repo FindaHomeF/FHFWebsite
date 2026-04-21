@@ -109,7 +109,7 @@ const Testimonials = () => {
 
       <div className="relative w-[90%] lg:w-5/6 max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-5 md:7" id="testimonials">
+        <div className="text-center mb-5 md:mb-7 scroll-mt-24" id="testimonials">
           <div className="inline-block mb-4">
             <span className="text-primary font-semibold text-sm uppercase tracking-wider bg-primary/10 px-4 py-2 rounded-full">
               Testimonials

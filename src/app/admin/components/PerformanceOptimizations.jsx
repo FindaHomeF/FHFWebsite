@@ -48,6 +48,7 @@ export const AdminErrorBoundary = ({ children, fallback }) => {
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
           <p className="text-gray-600 mb-4">Please refresh the page or contact support.</p>
           <button 
+            type="button"
             onClick={() => window.location.reload()}
             className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark"
           >

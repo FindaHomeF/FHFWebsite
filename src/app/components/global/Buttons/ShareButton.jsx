@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 const ShareButton = ({ 
     shareUrl, 
-    variant = "default",
+    variant = "outline",
     className = "", 
     iconOnly = false,
     buttonText = "Share",
@@ -31,13 +31,15 @@ const ShareButton = ({
         <Button
             className={`
                 rounded-full flex items-center gap-x-2 justify-center border border-borderGray 
-                bg-transparent text-primary
+                bg-transparent text-primary hover:bg-primary hover:text-white hover:border-primary
                 ${className}
             `}
             onClick={handleShare}
             variant={variant}
+            type="button"
+            aria-label={iconOnly ? buttonText : undefined}
         >
-            <CiShare2 className="font-bold"/>
+            <CiShare2 className="font-bold transition-colors" />
             {!iconOnly && <h6 className="hidden md:block">{buttonText}</h6>}
         </Button>
     );

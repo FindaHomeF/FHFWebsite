@@ -31,7 +31,7 @@ const page = () => {
           <Categories/>
           <LatestListings/>
           <div className='py-10 mt-8 lg:mt-20'>
-            <How/>
+            <How variant="services" />
           </div>
           <div className='lg:mt-10'>
             <Testimonials />

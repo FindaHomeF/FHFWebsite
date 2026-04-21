@@ -140,12 +140,17 @@ const Footer = () => {
               Subscribe to our newsletter for the latest listings and updates.
             </p>
             <form className="space-y-3">
+              <label htmlFor="newsletter-email" className="sr-only">
+                Email address
+              </label>
               <Input
+                id="newsletter-email"
                 type="email"
                 placeholder="Enter your email"
                 className="h-11 bg-white"
+                aria-label="Email address"
               />
-              <Button className="w-full h-11 bg-primary hover:bg-primary/90">
+              <Button type="submit" className="w-full h-11 bg-primary hover:bg-primary/90">
                 Subscribe
               </Button>
             </form>

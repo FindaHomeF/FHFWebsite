@@ -11,10 +11,13 @@ export const ButtonGS = ({
  }) => {
   return (
     <Link href={cta}>
-      <Button className={` 
+      <Button
+        variant="ghost"
+        className={` 
         ${className}  
         ${uppercase && "uppercase"} 
-        bg-primary font-medium
+        !bg-primary !text-white font-medium hover:!bg-primary/70
+        transition-all duration-300 ease-in-out
         rounded-full h-12 lg:w-[12rem]`}>{ content }
       </Button>
     </Link>
@@ -24,11 +27,14 @@ export const ButtonGS = ({
 export const FindaHome = ({ content = "List Your Property", uppercase = true, cta='/auth' }) => {
   return (
     <Link href={cta}>
-      <Button className={` 
+      <Button
+        variant="ghost"
+        className={` 
         ${uppercase && "uppercase"} 
-        bg-transparent rounded-full h-12 
-        w-[12rem] border border-primary text-primary 
-        hover:bg-black/0 lg:hover-bg-primary/20 `}>
+        !bg-transparent rounded-full h-12 
+        w-[12rem] border !border-primary !text-primary 
+        hover:!bg-primary hover:!text-white
+        transition-all duration-300 ease-in-out `}>
           { content }
       </Button>
     </Link>
@@ -36,7 +42,8 @@ export const FindaHome = ({ content = "List Your Property", uppercase = true, ct
 }
 
 export const SeeAll = ({ 
-  whiteBorder = false, 
+  border = 'primary',
+  whiteBorder = false,
   cta = '/apartments/all',
   filterType,
   filterValue
@@ -51,14 +58,19 @@ export const SeeAll = ({
     return `${url.pathname}${url.search}`;
   };
 
+  const resolvedBorder = whiteBorder ? 'white' : border
+  const isWhiteBorder = resolvedBorder === 'white'
+
   return (
     <Link href={buildUrl()}>
-      <Button className={`
-      ${whiteBorder ? "border-whiteOpacity hover:bg-white/5" : "border-primary" }  
-      capitalize text-sm md:text-base tracking-wide bg-primary 
+      <Button
+      variant="ghost"
+      className={`
+      ${isWhiteBorder ? "!border-white !text-white hover:!bg-white/10 hover:!border-white" : "!border-primary !text-white hover:!bg-secondary hover:!border-secondary"}  
+      capitalize text-sm md:text-base tracking-wide !bg-primary 
       font-medium h-10 md:h-12 w-fit md:w-[10rem] rounded-full border 
-      flex items-center gap-x-3`}>See All 
-      <span className={`bg-white rounded-full text-primary p-1`}>
+      flex items-center gap-x-3 transition-all duration-300 ease-in-out`}>See All 
+      <span className={`bg-white rounded-full ${isWhiteBorder ? 'text-primary' : 'text-secondary'} p-1`}>
       <GoArrowUpRight size={20}/></span></Button>
     </Link>
   )
@@ -67,7 +79,12 @@ export const SeeAll = ({
 export const UnlockBtn = ({text, className='', cta='/auth'}) => {
   return ( 
     <Link href={cta}>
-      <Button className={`${className} Capitalize bg-white rounded-full h-12 w-fit text-base font-semibold text-primary flex items-center"`}>{text}<span className="bg-white rounded-full p-1 border border-primary"><GoArrowUpRight size={15}/></span></Button>
+      <Button className={`${className} capitalize bg-white rounded-full h-12 w-fit text-base font-semibold text-primary flex items-center gap-x-2 transition-all duration-300 ease-in-out hover:bg-primary hover:text-white`}>
+        {text}
+        <span className="bg-white rounded-full p-1 border border-primary">
+          <GoArrowUpRight size={15} className="text-primary" />
+        </span>
+      </Button>
     </Link>
   )
 }
