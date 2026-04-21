@@ -7,20 +7,14 @@ const ContactInfo = () => {
     {
       icon: Phone,
       title: 'Phone',
-      details: ['+234 123 456 7890', '+234 098 765 4321'],
-      action: 'tel:+2341234567890'
+      details: ['+234 813 531 8003'],
+      action: 'tel:+2348135318003'
     },
     {
       icon: Mail,
       title: 'Email',
       details: ['info@findahomefuta.com', 'support@findahomefuta.com'],
       action: 'mailto:info@findahomefuta.com'
-    },
-    {
-      icon: MapPin,
-      title: 'Office',
-      details: ['North Gate, Akure', 'Ondo State, Nigeria'],
-      action: null
     },
     {
       icon: Clock,
@@ -98,22 +92,7 @@ const ContactInfo = () => {
         </div>
       </div>
 
-      {/* Additional Info Card */}
-      <div className="bg-secondary/10 border-l-4 border-secondary rounded-lg p-6">
-        <h3 className="font-semibold text-lg text-gray-900 mb-2">
-          Need Immediate Help?
-        </h3>
-        <p className="text-gray-600 mb-4">
-          For urgent accommodation inquiries or immediate assistance, our 24/7 helpline is always available. You can also visit our office during business hours.
-        </p>
-        <a
-          href="tel:+2341234567890"
-          className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
-        >
-          <Phone size={18} />
-          Call Now
-        </a>
-      </div>
+      
     </div>
   )
 }

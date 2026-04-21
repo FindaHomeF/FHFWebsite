@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
-import { Search, Filter, Download, Plus, MoreHorizontal, TrendingUp } from 'lucide-react'
+import { Search, Filter, Download, Plus, MoreHorizontal, TrendingUp, DollarSign, CreditCard, Clock, XCircle, Eye } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import AdminTableWithBulk from '../components/AdminTableWithBulk'
 import StatsCard from '../components/StatsCard'
-import { DollarSign, CreditCard, Clock, XCircle } from 'lucide-react'
 
 // Mock data for transactions
 const mockTransactions = [
@@ -217,10 +216,20 @@ const TransactionsPage = () => {
   }, [])
 
   const handleRowClick = useCallback((transaction) => {
-    const encodedId = encodeURIComponent(transaction.id);
-    console.log('Navigating to transaction details:', encodedId);
-    router.push(`/admin/transactions/${encodedId}`);
-  }, [router]);
+    router.push(`/admin/transactions/${encodeURIComponent(transaction.id)}`)
+  }, [router])
+
+  const getRowActions = useCallback(
+    (transaction) => [
+      {
+        id: 'view',
+        label: 'View transaction',
+        icon: <Eye className="h-4 w-4" />,
+        onClick: () => router.push(`/admin/transactions/${encodeURIComponent(transaction.id)}`),
+      },
+    ],
+    [router]
+  )
 
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
@@ -502,6 +511,7 @@ const TransactionsPage = () => {
                 pageNumbers={pageNumbers}
                 getStatusBadge={getStatusBadge}
                 onRowClick={handleRowClick}
+                getRowActions={getRowActions}
                 bulkActions={['approve', 'reject', 'export']}
                 onBulkAction={handleBulkAction}
                 />

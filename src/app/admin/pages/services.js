@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
-import { Search, Filter, Download, Plus, MoreVertical } from 'lucide-react'
+import { Search, Filter, Download, Plus, MoreVertical, Eye, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -238,6 +238,29 @@ const ServicesPage = () => {
     router.push(`/admin/services/${encodeURIComponent(service.id)}`)
   }, [router])
 
+  const getRowActions = useCallback(
+    (service) => {
+      const actions = [
+        {
+          id: 'view',
+          label: 'View service',
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/services/${encodeURIComponent(service.id)}`),
+        },
+      ]
+      if (service.status === 'Pending') {
+        actions.push({
+          id: 'approval',
+          label: 'Review approval',
+          icon: <ClipboardList className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/services/approval/${encodeURIComponent(service.id)}`),
+        })
+      }
+      return actions
+    },
+    [router]
+  )
+
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
     // Add your bulk action logic here
@@ -435,6 +458,7 @@ const ServicesPage = () => {
           statusBadgeStyles={statusBadgeStyles}
           getStatusBadge={getStatusBadge}
           onRowClick={handleRowClick}
+          getRowActions={getRowActions}
           bulkActions={['approve', 'reject', 'delete', 'export']}
           onBulkAction={handleBulkAction}
         />

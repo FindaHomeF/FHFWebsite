@@ -19,7 +19,7 @@ export default function AllDeclutteredItemsPage() {
       <div className="mt-10 md:mt-0">
         <HeroSection
           showScrollDownButton={false}
-          mainText="Declutter & Find Essentials"
+          mainText="Student Marketplace"
           subText="Sell items you no longer need and discover affordable pre-owned essentials from trusted FUTA students."
           primaryButtonText="LIST AN ITEM"
           secondaryButtonText="BROWSE CATEGORIES"

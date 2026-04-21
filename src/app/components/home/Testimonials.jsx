@@ -3,6 +3,7 @@ import Image from "next/image"
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, Star } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { motionTransition } from '@/lib/motion'
 
 // Mock testimonials data
 const testimonials = [
@@ -174,11 +175,7 @@ const Testimonials = () => {
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 200, damping: 25 },
-                    opacity: { duration: 0.3 },
-                    scale: { duration: 0.3 },
-                  }}
+                  transition={motionTransition.testimonialSlide}
                   className="relative"
                 >
                   {/* Card */}

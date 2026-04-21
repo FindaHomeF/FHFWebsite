@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
-import { Search, Filter, Download, Plus } from 'lucide-react'
+import { Search, Filter, Download, Plus, Eye, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -169,6 +169,29 @@ const UsersPage = () => {
   const handleRowClick = useCallback((user) => {
     router.push(`/admin/users/${encodeURIComponent(user.id)}`)
   }, [router])
+
+  const getRowActions = useCallback(
+    (user) => {
+      const actions = [
+        {
+          id: 'view',
+          label: 'View user',
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/users/${encodeURIComponent(user.id)}`),
+        },
+      ]
+      if (user.status === 'Pending') {
+        actions.push({
+          id: 'approval',
+          label: 'Review approval',
+          icon: <ClipboardList className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/users/approval/${encodeURIComponent(user.id)}`),
+        })
+      }
+      return actions
+    },
+    [router]
+  )
 
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
@@ -470,6 +493,7 @@ const UsersPage = () => {
           handleNext={handleNext}
           pageNumbers={pageNumbers}
           onRowClick={handleRowClick}
+          getRowActions={getRowActions}
           getStatusBadge={(status) => {
             const variants = {
               Active: 'bg-green-600 text-white',

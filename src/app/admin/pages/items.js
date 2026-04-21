@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useMemo, useCallback, memo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Filter, MoreHorizontal, Download, ChevronDown, Plus } from 'lucide-react'
+import { Search, Filter, MoreHorizontal, Download, ChevronDown, Plus, Eye, Pencil, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -381,6 +381,35 @@ export default function ItemsPage() {
     router.push(`/admin/items/${encodeURIComponent(item.id)}`)
   }, [router])
 
+  const getRowActions = useCallback(
+    (item) => {
+      const actions = [
+        {
+          id: 'view',
+          label: 'View item',
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/items/${encodeURIComponent(item.id)}`),
+        },
+        {
+          id: 'edit',
+          label: 'Edit item',
+          icon: <Pencil className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/items/edit/${encodeURIComponent(item.id)}`),
+        },
+      ]
+      if (item.status === 'Pending') {
+        actions.push({
+          id: 'approval',
+          label: 'Review approval',
+          icon: <ClipboardList className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/items/approval/${encodeURIComponent(item.id)}`),
+        })
+      }
+      return actions
+    },
+    [router]
+  )
+
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
     // Add your bulk action logic here
@@ -594,6 +623,7 @@ export default function ItemsPage() {
           statusBadgeStyles={statusBadgeStyles}
           getStatusBadge={getStatusBadge}
           onRowClick={handleRowClick}
+          getRowActions={getRowActions}
           bulkActions={['approve', 'reject', 'delete', 'export']}
           onBulkAction={handleBulkAction}
         />

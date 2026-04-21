@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, AlertCircle, Lock } from 'lucide-react'
+import { Search, Plus, AlertCircle, Lock, TrendingUp, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -136,8 +136,26 @@ export default function AgentItemsPage() {
   }, [statusBadgeStyles])
 
   const handleRowClick = useCallback((item) => {
-    router.push(`/agent/items/${item.id}`)
+    router.push(`/decluttering/${encodeURIComponent(item.id)}`)
   }, [router])
+
+  const getRowActions = useCallback(
+    (item) => [
+      {
+        id: 'analytics',
+        label: 'View analytics',
+        icon: <TrendingUp className="h-4 w-4" />,
+        onClick: () => router.push(`/agent/analytics/item/${encodeURIComponent(item.id)}`),
+      },
+      {
+        id: 'listing',
+        label: 'View listing',
+        icon: <Eye className="h-4 w-4" />,
+        onClick: () => router.push(`/decluttering/${encodeURIComponent(item.id)}`),
+      },
+    ],
+    [router]
+  )
 
   const pageNumbers = useMemo(() => {
     const pages = []
@@ -412,6 +430,7 @@ export default function AgentItemsPage() {
             onRowClick={handleRowClick}
             bulkActions={viewMode === 'archived' ? ['restore', 'delete', 'export'] : ['delete', 'export']}
             onBulkAction={handleBulkAction}
+            getRowActions={getRowActions}
           />
         </div>
       )}

@@ -9,6 +9,8 @@ import Listings from "../components/home/Listings";
 import Testimonials from "../components/home/Testimonials";
 import Unlock from "../components/home/Unlock";
 import Steps from "../components/home/Steps";
+import RevealOnScroll from "@/components/ui/reveal-on-scroll";
+import { motionSectionDelay } from '@/lib/motion'
 
 
 
@@ -25,13 +27,13 @@ const HomePage = () => {
             <Header/>
             <HeroSection/>
           </div>
-          <About/>
-          <Features/>
-          <Listings/>
-          <Steps/>
-          <Decluttered/>
-          <Testimonials/>
-          <Unlock/>
+          <RevealOnScroll><About/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(2.5)}><Features/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(4)}><Listings/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(5)}><Steps/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(6)}><Decluttered/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(7)}><Testimonials/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(8)}><Unlock/></RevealOnScroll>
         </main>
         {/* } */}
         <footer>

@@ -124,7 +124,6 @@ const Header = () => {
         <div className="menu-outer w-auto hidden md:flex md:flex-1 md:justify-center">
           <ul className="menu-inner h-10 px-5 uppercase gap-x-7 text-sm font-medium tracking-wide cursor-pointer flex w-auto items-center justify-center">
             <Link href='/about'><li className={desktopNavItemClass}>About Us</li></Link>
-            <Link href='/contact'><li className={desktopNavItemClass}>Contact</li></Link>
             <li
               className={`z-10 relative group transition-all ease-linear duration-300 ${desktopNavItemClass} ${isDesktopProductsOpen ? 'after:scale-x-100' : ''}`}
               onMouseEnter={() => setIsDesktopProductsOpen(true)}
@@ -164,6 +163,7 @@ const Header = () => {
               </ul>
             </li>
             <Link href={'/#testimonials'} onClick={handleTestimonialsClick}><li className={desktopNavItemClass}>Testimonial</li></Link>
+            <Link href='/contact'><li className={desktopNavItemClass}>Contact</li></Link>
           </ul>
         </div>
 

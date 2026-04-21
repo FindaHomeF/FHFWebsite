@@ -1,12 +1,12 @@
 'use client'
 import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Filter, Download, Plus, MoreVertical, Edit, Trash2, Eye, Briefcase } from 'lucide-react'
+import { Search, Filter, Download, Plus, Edit, Trash2, Eye, Briefcase, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { RowActionsMenu } from '@/components/ui/row-actions-menu'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
@@ -178,31 +178,37 @@ export default function ServicesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(service.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/artisan/services/${encodeURIComponent(service.id)}`)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/artisan/services/edit/${service.id}`)}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => requestDelete(service.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap" data-row-actions>
+                      <RowActionsMenu
+                        actions={[
+                          {
+                            id: 'analytics',
+                            label: 'View analytics',
+                            icon: <TrendingUp className="h-4 w-4" />,
+                            onClick: () =>
+                              router.push(`/artisan/analytics/service/${encodeURIComponent(service.id)}`),
+                          },
+                          {
+                            id: 'details',
+                            label: 'View details',
+                            icon: <Eye className="h-4 w-4" />,
+                            onClick: () => router.push(`/artisan/services/${encodeURIComponent(service.id)}`),
+                          },
+                          {
+                            id: 'edit',
+                            label: 'Edit',
+                            icon: <Edit className="h-4 w-4" />,
+                            onClick: () => router.push(`/artisan/services/edit/${service.id}`),
+                          },
+                          {
+                            id: 'delete',
+                            label: 'Delete',
+                            icon: <Trash2 className="h-4 w-4" />,
+                            destructive: true,
+                            onClick: () => requestDelete(service.id),
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}

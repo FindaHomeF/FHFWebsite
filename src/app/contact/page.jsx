@@ -5,6 +5,8 @@ import ContactHero from './components/ContactHero'
 import ContactForm from './components/ContactForm'
 import ContactInfo from './components/ContactInfo'
 import ContactMap from './components/ContactMap'
+import RevealOnScroll from '@/components/ui/reveal-on-scroll'
+import { motionSectionDelay } from '@/lib/motion'
 
 const ContactPage = () => {
   return (
@@ -12,20 +14,22 @@ const ContactPage = () => {
         scroll-smooth transition-all ease-linear duration-500">
         <main>
           <Header/>
-          <ContactHero />
+          <RevealOnScroll><ContactHero /></RevealOnScroll>
           
           <div className="w-[90%] md:w-5/6 mx-auto py-16 space-y-16">
             {/* Contact Form and Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-              <ContactForm />
-              <ContactInfo />
-            </div>
+            <RevealOnScroll delay={motionSectionDelay(3)}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+                <ContactForm />
+                <ContactInfo />
+              </div>
+            </RevealOnScroll>
 
             {/* Map */}
-            <ContactMap />
+            <RevealOnScroll delay={motionSectionDelay(5)}><ContactMap /></RevealOnScroll>
           </div>
 
-          <FooterCta/>
+          <RevealOnScroll delay={motionSectionDelay(7)}><FooterCta/></RevealOnScroll>
         </main>
         <footer>
           <Footer/>

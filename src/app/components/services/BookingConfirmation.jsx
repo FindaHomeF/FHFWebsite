@@ -125,7 +125,7 @@ const BookingConfirmation = ({ booking, onClose }) => {
           Close
         </Button>
         <Button className="flex-1 bg-primary hover:bg-primary/90">
-          <Link href="/bookings" className="w-full text-center">
+          <Link href="/student/bookings" className="w-full text-center">
             View My Bookings
           </Link>
         </Button>

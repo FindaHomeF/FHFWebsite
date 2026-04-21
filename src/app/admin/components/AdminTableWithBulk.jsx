@@ -1,9 +1,104 @@
 'use client'
-import React, { memo, useState, useEffect, useMemo } from 'react'
-import { MoreHorizontal, Check, CheckSquare, Square, CheckCircle2, Trash2, Download, XCircle, Ban, Power, RotateCcw } from 'lucide-react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { Check, CheckSquare, Square, CheckCircle2, Trash2, Download, XCircle, Ban, Power, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { RowActionsMenu } from '@/components/ui/row-actions-menu'
 import { toast } from 'sonner'
+
+/** Module-level row so React identity stays stable across parent re-renders. */
+function AdminBulkTableRow({
+  item,
+  index,
+  columns,
+  getStatusBadge,
+  onRowClick,
+  actionsColumn,
+  getRowActions,
+  isSelected,
+  onToggleRow,
+}) {
+  const itemId = item.id || item._id
+  const rowActions = typeof getRowActions === 'function' ? getRowActions(item) : null
+
+  return (
+    <tr
+      className={`text-xs hover:bg-gray-50 transition-colors border-b-2 border-b-white cursor-pointer ${
+        index % 2 === 0 ? 'bg-black10' : 'bg-white'
+      } ${isSelected ? 'bg-blue-50' : ''}`}
+      onClick={(e) => {
+        if (e.target instanceof Element && e.target.closest('[data-row-actions]')) return
+        if (onRowClick) onRowClick(item)
+      }}
+      onKeyDown={(event) => {
+        if (!onRowClick) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onRowClick(item)
+        }
+      }}
+      tabIndex={0}
+      aria-label={`Open details for ${item?.title || item?.name || itemId}`}
+    >
+      <td className="w-12 px-3 py-2 md:px-6 md:py-3" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={() => onToggleRow(itemId)}
+          className="flex items-center justify-center"
+          aria-label={isSelected ? `Deselect ${item?.title || itemId}` : `Select ${item?.title || itemId}`}
+        >
+          {isSelected ? (
+            <CheckSquare className="h-4 w-4 text-primary" />
+          ) : (
+            <Square className="h-4 w-4 text-gray-400" />
+          )}
+        </button>
+      </td>
+      {columns.map((column) => {
+        const cellValue = item[column.key] || ''
+
+        if (column.render) {
+          return (
+            <td key={column.key} className={`px-3 py-2 md:px-6 md:py-3 ${column.width || ''}`}>
+              {column.render(item)}
+            </td>
+          )
+        }
+
+        if (column.key === 'status' && item.status) {
+          return (
+            <td key={column.key} className={`px-3 py-2 md:px-6 md:py-3 ${column.width || ''}`}>
+              {getStatusBadge(item.status)}
+            </td>
+          )
+        }
+
+        return (
+          <td
+            key={column.key}
+            className={`px-3 py-2 text-gray-800 md:px-6 md:py-3 ${column.width || ''} ${column.truncate ? 'truncate' : ''} ${column.fontMedium ? 'font-medium' : ''}`}
+          >
+            {cellValue}
+          </td>
+        )
+      })}
+
+      {actionsColumn && (
+        <td
+          className="w-16 px-3 py-2 md:px-6 md:py-3"
+          data-row-actions
+          onClick={(e) => e.stopPropagation()}
+        >
+          {rowActions?.length ? (
+            <RowActionsMenu actions={rowActions} />
+          ) : (
+            <span className="text-xs text-gray-400">—</span>
+          )}
+        </td>
+      )}
+    </tr>
+  )
+}
 
 const AdminTableWithBulk = ({ 
   columns, 
@@ -19,7 +114,9 @@ const AdminTableWithBulk = ({
   onRowClick,
   actionsColumn = true,
   bulkActions = ['approve', 'delete', 'export'],
-  onBulkAction
+  onBulkAction,
+  /** When set, ⋯ opens a table-safe menu. Return `[{ id, label, icon?, onClick, destructive? }]` per row. */
+  getRowActions,
 }) => {
   const [selectedItems, setSelectedItems] = useState([])
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -132,87 +229,6 @@ const AdminTableWithBulk = ({
     return [1, '...', currentPage, '...', totalPages]
   }, [currentPage, paginationData?.totalPages])
 
-  const TableRow = memo(({ item, index }) => {
-    const itemId = item.id || item._id
-    const isSelected = selectedItems.includes(itemId)
-
-    return (
-      <tr 
-        className={`text-xs hover:bg-gray-50 transition-colors border-b-2 border-b-white cursor-pointer ${
-          index % 2 === 0 ? 'bg-black10' : 'bg-white'
-        } ${isSelected ? 'bg-blue-50' : ''}`}
-        onClick={() => onRowClick && onRowClick(item)}
-        onKeyDown={(event) => {
-          if (!onRowClick) return
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault()
-            onRowClick(item)
-          }
-        }}
-        tabIndex={0}
-        aria-label={`Open details for ${item?.title || item?.name || itemId}`}
-      >
-        <td className="py-2 px-3 md:py-3 md:px-6 w-12" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => toggleItem(itemId)}
-            className="flex items-center justify-center"
-            aria-label={isSelected ? `Deselect ${item?.title || itemId}` : `Select ${item?.title || itemId}`}
-          >
-            {isSelected ? (
-              <CheckSquare className="h-4 w-4 text-primary" />
-            ) : (
-              <Square className="h-4 w-4 text-gray-400" />
-            )}
-          </button>
-        </td>
-        {columns.map((column) => {
-          const cellValue = item[column.key] || ''
-          
-          if (column.render) {
-            return (
-              <td key={column.key} className={`py-2 px-3 md:py-3 md:px-6 ${column.width || ''}`}>
-                {column.render(item)}
-              </td>
-            )
-          }
-          
-          if (column.key === 'status' && item.status) {
-            return (
-              <td key={column.key} className={`py-2 px-3 md:py-3 md:px-6 ${column.width || ''}`}>
-                {getStatusBadge(item.status)}
-              </td>
-            )
-          }
-          
-          return (
-            <td 
-              key={column.key} 
-              className={`py-2 px-3 md:py-3 md:px-6 text-gray-800 ${column.width || ''} ${column.truncate ? 'truncate' : ''} ${column.fontMedium ? 'font-medium' : ''}`}
-            >
-              {cellValue}
-            </td>
-          )
-        })}
-        
-        {actionsColumn && (
-          <td className="py-2 px-3 md:py-3 md:px-6 w-16" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
-              aria-label={`More actions for ${item?.title || itemId}`}
-            >
-              <MoreHorizontal className="w-4 h-4 text-gray-600" />
-            </button>
-          </td>
-        )}
-      </tr>
-    )
-  })
-
   return (
     <div>
       {/* Bulk Actions Bar - Always reserve space to prevent layout shift */}
@@ -295,13 +311,23 @@ const AdminTableWithBulk = ({
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((item, index) => (
-                <TableRow 
-                  key={`${item.id || item._id}-${currentPage}-${index}`} 
-                  item={item} 
-                  index={index} 
-                />
-              ))}
+              {currentItems.map((item, index) => {
+                const itemId = item.id || item._id
+                return (
+                  <AdminBulkTableRow
+                    key={`${itemId}-${currentPage}-${index}`}
+                    item={item}
+                    index={index}
+                    columns={columns}
+                    getStatusBadge={getStatusBadge}
+                    onRowClick={onRowClick}
+                    actionsColumn={actionsColumn}
+                    getRowActions={getRowActions}
+                    isSelected={selectedItems.includes(itemId)}
+                    onToggleRow={toggleItem}
+                  />
+                )
+              })}
             </tbody>
           </table>
         </div>

@@ -16,6 +16,7 @@ import Link from "next/link";
 import Wishlist from "./Buttons/WishlistBtn";
 import ShareButton from "./Buttons/ShareButton";
 import FloatingChat from "@/app/sp/components/FloatingChat";
+import { MOTION_INTERACTION_CLASS } from '@/lib/motion'
 
 const ListingBox = ({image, propertyId = "1", item = null, itemIndex = 0}) => {
   const [showChat, setShowChat] = useState(false)
@@ -41,8 +42,8 @@ const ListingBox = ({image, propertyId = "1", item = null, itemIndex = 0}) => {
   const isOutOfStock = inventory !== null && inventory === 0;
 
   return (
-    <div className={`listings-box w-full shadow shadow-black10 rounded-xl bg-white overflow-hidden border group border-black33 ${isOutOfStock ? 'opacity-60' : ''}`}>
-        <div className="listing-image h-[10rem] md:h-[13.75rem] relative overflow-hidden ">
+    <div className={`listings-box w-full shadow shadow-black10 rounded-xl bg-white overflow-visible border group border-black33 transition-all ${MOTION_INTERACTION_CLASS} hover:-translate-y-1 hover:shadow-lg ${isOutOfStock ? 'opacity-60' : ''}`}>
+        <div className="listing-image h-[10rem] md:h-[13.75rem] relative overflow-hidden rounded-t-xl">
             <Link
             href={`/sp/${displayItem.propertyId}`}
             >
@@ -51,7 +52,7 @@ const ListingBox = ({image, propertyId = "1", item = null, itemIndex = 0}) => {
                     alt="apartment main media"
                     height={300}    
                     width={300}
-                    className="object-fit h-full w-full rounded-lg relative group-hover:scale-105 transition-all ease-linear duration-300"
+                    className={`object-fit h-full w-full relative group-hover:scale-105 transition-all ${MOTION_INTERACTION_CLASS}`}
                 />
             </Link>
             <Wishlist item={displayItem} itemType="apartment" />
@@ -75,7 +76,7 @@ const ListingBox = ({image, propertyId = "1", item = null, itemIndex = 0}) => {
             </div>
         </div>
 
-        <div className="listing-info p-3">
+        <div className="listing-info rounded-b-xl bg-white p-3">
             <div className="info-top w-full">
                 <div className="md:w-5/6 mx-auto text-center">
                 <Link

@@ -1,9 +1,12 @@
+import { Suspense } from 'react'
 import EmailOtpForm from '@/app/components/auth/EmailOtpForm'
 
 const VerifyOtpPage = () => {
   return (
     <div className='w-full'>
-      <EmailOtpForm />
+      <Suspense fallback={<div className='w-full h-screen bg-white' />}>
+        <EmailOtpForm />
+      </Suspense>
     </div>
   )
 }

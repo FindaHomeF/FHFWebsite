@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Filter, Download, Plus, MoreVertical } from 'lucide-react'
+import { Search, Filter, Download, Plus, MoreVertical, Eye, Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -307,6 +307,24 @@ export default function PropertiesPage() {
     router.push(`/admin/properties/${property.id}`)
   }, [router])
 
+  const getRowActions = useCallback(
+    (property) => [
+      {
+        id: 'view',
+        label: 'View property',
+        icon: <Eye className="h-4 w-4" />,
+        onClick: () => router.push(`/admin/properties/${property.id}`),
+      },
+      {
+        id: 'edit',
+        label: 'Edit property',
+        icon: <Pencil className="h-4 w-4" />,
+        onClick: () => router.push(`/admin/properties/edit/${encodeURIComponent(property.id)}`),
+      },
+    ],
+    [router]
+  )
+
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
     // Add your bulk action logic here
@@ -482,6 +500,7 @@ export default function PropertiesPage() {
               statusBadgeStyles={statusBadgeStyles}
               getStatusBadge={getStatusBadge}
               onRowClick={handleRowClick}
+              getRowActions={getRowActions}
               bulkActions={['approve', 'reject', 'delete', 'export']}
               onBulkAction={handleBulkAction}
             />

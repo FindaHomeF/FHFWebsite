@@ -6,7 +6,8 @@ import {
   Package, 
   Users,
   Wallet, 
-  User
+  User,
+  CalendarDays,
 } from 'lucide-react';
 import Image from "next/image"
 import { useStudent } from '../context/StudentContext'
@@ -16,6 +17,7 @@ const navigation = [
   { name: 'Properties', href: '/student/properties', icon: Building2, requiresApproval: true },
   { name: 'Decluttering', href: '/student/decluttering', icon: Package, requiresApproval: true },
   { name: 'Roommate Finder', href: '/student/roommate-finder', icon: Users, requiresApproval: true },
+  { name: 'Bookings', href: '/student/bookings', icon: CalendarDays },
   { name: 'Payments & Transactions', href: '/student/payments', icon: Wallet },
   { name: 'Profile', href: '/student/profile', icon: User },
 ];

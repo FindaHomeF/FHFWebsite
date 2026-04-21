@@ -2,12 +2,10 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import Image from 'next/image'
-import { Search, Plus, Send, MoreVertical, Phone, CalendarClock, Paperclip, Smile, Check, CheckCheck } from 'lucide-react'
+import { Search, Plus, Send, MoreVertical, Phone, CalendarClock, Paperclip, Smile, Check, CheckCheck, ChevronLeft } from 'lucide-react'
 import Header from '@/app/components/global/Header'
-import Footer from '@/app/components/global/Footer'
 
 // Mock conversations data
 const mockConversations = [
@@ -115,6 +113,8 @@ export default function MessagesPage() {
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false)
   const [appointmentDate, setAppointmentDate] = useState('')
   const [appointmentTime, setAppointmentTime] = useState('')
+  /** On small screens, show thread full-width after picking a conversation */
+  const [mobileShowThread, setMobileShowThread] = useState(false)
 
   const currentMessages = mockMessages[selectedConversation] || []
   const currentConversation = conversations.find(c => c.id === selectedConversation)
@@ -139,13 +139,13 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="bg-white w-full overflow-x-hidden scroll-smooth transition-all ease-linear duration-500">
+    <div className="bg-white flex h-dvh min-h-0 w-full flex-col overflow-hidden">
       <Header />
-      <main className="min-h-screen py-8 md:py-12">
-        <div className="w-[90%] mx-auto max-w-7xl">
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+      <main className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-3 md:px-6 md:pb-5 md:pt-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+          <div className="mb-3 shrink-0 md:mb-4">
+            <div className="flex items-center justify-between gap-3">
+              <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Messages</h1>
               <Dialog open={showNewMessageDialog} onOpenChange={setShowNewMessageDialog}>
                 <DialogTrigger asChild>
                   <Button className="bg-primary hover:bg-primary/90">
@@ -184,9 +184,13 @@ export default function MessagesPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-black10 rounded-lg overflow-hidden h-[600px] flex">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-black10 bg-white md:flex-row">
             {/* Conversations List */}
-            <div className="w-full md:w-80 border-r border-black10 flex flex-col">
+            <div
+              className={`flex min-h-0 w-full min-w-0 flex-col border-black10 md:w-80 md:max-w-[20rem] md:border-r ${
+                mobileShowThread ? 'hidden md:flex' : 'flex'
+              }`}
+            >
               <div className="p-4 border-b border-black10">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -201,7 +205,10 @@ export default function MessagesPage() {
                 {conversations.map((conversation) => (
                   <button
                     key={conversation.id}
-                    onClick={() => setSelectedConversation(conversation.id)}
+                    onClick={() => {
+                      setSelectedConversation(conversation.id)
+                      setMobileShowThread(true)
+                    }}
                     className={`w-full p-4 text-left hover:bg-gray-50 transition-colors border-b border-black66 ${
                       selectedConversation === conversation.id ? 'bg-primary/5 border-l-4 border-l-black66' : ''
                     }`}
@@ -242,12 +249,24 @@ export default function MessagesPage() {
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 flex-col hidden md:flex">
+            <div
+              className={`min-h-0 flex-1 flex-col ${mobileShowThread ? 'flex' : 'hidden md:flex'}`}
+            >
               {currentConversation ? (
                 <>
                   {/* Chat Header */}
-                  <div className="p-4 border-b border-black10 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex shrink-0 items-center justify-between border-b border-black10 p-3 md:p-4">
+                    <div className="flex min-w-0 items-center gap-2 md:gap-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 md:hidden"
+                        onClick={() => setMobileShowThread(false)}
+                        aria-label="Back to conversations"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </Button>
                       <div className="relative">
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                           <Image
@@ -331,7 +350,7 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                  <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-gray-50 p-3 md:p-4">
                     {currentMessages.map((message) => (
                       <div
                         key={message.id}
@@ -357,7 +376,7 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Message Input */}
-                  <form onSubmit={handleSendMessage} className="p-4 border-t border-black10 bg-white">
+                  <form onSubmit={handleSendMessage} className="shrink-0 border-t border-black10 bg-white p-3 md:p-4">
                     <div className="flex items-center gap-2">
                       <Button type="button" variant="ghost" size="sm">
                         <Paperclip className="w-5 h-5" />
@@ -378,28 +397,14 @@ export default function MessagesPage() {
                   </form>
                 </>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-500">
+                <div className="flex flex-1 items-center justify-center text-gray-500">
                   Select a conversation to start messaging
                 </div>
               )}
             </div>
           </div>
-
-          {/* Mobile: Show only selected conversation */}
-          <div className="md:hidden mt-4">
-            {currentConversation && (
-              <div className="bg-white border border-black10 rounded-lg p-4">
-                <h3 className="font-semibold mb-2">{currentConversation.name}</h3>
-                <p className="text-sm text-gray-600">{currentConversation.lastMessage}</p>
-                <Button className="w-full mt-4 bg-primary hover:bg-primary/90" onClick={() => {/* Open chat modal */}}>
-                  Open Chat
-                </Button>
-              </div>
-            )}
-          </div>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }
