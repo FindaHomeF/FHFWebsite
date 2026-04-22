@@ -143,8 +143,8 @@ export default function SettingsPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-black10 sticky top-[5.5rem] bg-white z-10">
-          <nav className="px-6 flex space-x-8">
+        <div className="border-b border-black10 sticky top-[5.5rem] bg-white z-10 max-w-full">
+          <nav className="px-6 flex space-x-8 w-full overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

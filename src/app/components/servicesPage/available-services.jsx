@@ -6,7 +6,7 @@ import { CardScroll, CardWrapper } from "@/components/ui/card-grid";
 
 const AvailableServices = () => {
   return (
-    <div className='w-[90%] max-w-full mx-auto'>
+    <div className='w-[90%] max-w-full mx-auto space-y-7'>
         <div className='text-center space-y-3'>
             <h3 className='font-semibold text-center mt-12 md:mt-16 
             text-2xl md:text-4xl lg:text-[40px]'>

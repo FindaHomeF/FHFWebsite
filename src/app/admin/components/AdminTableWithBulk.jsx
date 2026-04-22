@@ -1,9 +1,104 @@
 'use client'
-import React, { memo, useState, useEffect, useMemo } from 'react'
-import { MoreHorizontal, Check, CheckSquare, Square, CheckCircle2, Trash2, Download, XCircle, Ban, Power, RotateCcw } from 'lucide-react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { Check, CheckSquare, Square, CheckCircle2, Trash2, Download, XCircle, Ban, Power, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { RowActionsMenu } from '@/components/ui/row-actions-menu'
 import { toast } from 'sonner'
+
+/** Module-level row so React identity stays stable across parent re-renders. */
+function AdminBulkTableRow({
+  item,
+  index,
+  columns,
+  getStatusBadge,
+  onRowClick,
+  actionsColumn,
+  getRowActions,
+  isSelected,
+  onToggleRow,
+}) {
+  const itemId = item.id || item._id
+  const rowActions = typeof getRowActions === 'function' ? getRowActions(item) : null
+
+  return (
+    <tr
+      className={`text-xs hover:bg-gray-50 transition-colors border-b-2 border-b-white cursor-pointer ${
+        index % 2 === 0 ? 'bg-black10' : 'bg-white'
+      } ${isSelected ? 'bg-blue-50' : ''}`}
+      onClick={(e) => {
+        if (e.target instanceof Element && e.target.closest('[data-row-actions]')) return
+        if (onRowClick) onRowClick(item)
+      }}
+      onKeyDown={(event) => {
+        if (!onRowClick) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onRowClick(item)
+        }
+      }}
+      tabIndex={0}
+      aria-label={`Open details for ${item?.title || item?.name || itemId}`}
+    >
+      <td className="w-12 px-3 py-2 md:px-6 md:py-3" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={() => onToggleRow(itemId)}
+          className="flex items-center justify-center"
+          aria-label={isSelected ? `Deselect ${item?.title || itemId}` : `Select ${item?.title || itemId}`}
+        >
+          {isSelected ? (
+            <CheckSquare className="h-4 w-4 text-primary" />
+          ) : (
+            <Square className="h-4 w-4 text-gray-400" />
+          )}
+        </button>
+      </td>
+      {columns.map((column) => {
+        const cellValue = item[column.key] || ''
+
+        if (column.render) {
+          return (
+            <td key={column.key} className={`px-3 py-2 md:px-6 md:py-3 ${column.width || ''}`}>
+              {column.render(item)}
+            </td>
+          )
+        }
+
+        if (column.key === 'status' && item.status) {
+          return (
+            <td key={column.key} className={`px-3 py-2 md:px-6 md:py-3 ${column.width || ''}`}>
+              {getStatusBadge(item.status)}
+            </td>
+          )
+        }
+
+        return (
+          <td
+            key={column.key}
+            className={`px-3 py-2 text-gray-800 md:px-6 md:py-3 ${column.width || ''} ${column.truncate ? 'truncate' : ''} ${column.fontMedium ? 'font-medium' : ''}`}
+          >
+            {cellValue}
+          </td>
+        )
+      })}
+
+      {actionsColumn && (
+        <td
+          className="w-16 px-3 py-2 md:px-6 md:py-3"
+          data-row-actions
+          onClick={(e) => e.stopPropagation()}
+        >
+          {rowActions?.length ? (
+            <RowActionsMenu actions={rowActions} />
+          ) : (
+            <span className="text-xs text-gray-400">—</span>
+          )}
+        </td>
+      )}
+    </tr>
+  )
+}
 
 const AdminTableWithBulk = ({ 
   columns, 
@@ -19,7 +114,9 @@ const AdminTableWithBulk = ({
   onRowClick,
   actionsColumn = true,
   bulkActions = ['approve', 'delete', 'export'],
-  onBulkAction
+  onBulkAction,
+  /** When set, ⋯ opens a table-safe menu. Return `[{ id, label, icon?, onClick, destructive? }]` per row. */
+  getRowActions,
 }) => {
   const [selectedItems, setSelectedItems] = useState([])
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -122,86 +219,15 @@ const AdminTableWithBulk = ({
     return `Are you sure you want to ${normalizedAction} ${count} item(s)?`
   }
 
-  const TableRow = memo(({ item, index }) => {
-    const itemId = item.id || item._id
-    const isSelected = selectedItems.includes(itemId)
-
-    return (
-      <tr 
-        className={`text-xs hover:bg-gray-50 transition-colors border-b-2 border-b-white cursor-pointer ${
-          index % 2 === 0 ? 'bg-black10' : 'bg-white'
-        } ${isSelected ? 'bg-blue-50' : ''}`}
-        onClick={() => onRowClick && onRowClick(item)}
-        onKeyDown={(event) => {
-          if (!onRowClick) return
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault()
-            onRowClick(item)
-          }
-        }}
-        tabIndex={0}
-        aria-label={`Open details for ${item?.title || item?.name || itemId}`}
-      >
-        <td className="py-3 px-6 w-12" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => toggleItem(itemId)}
-            className="flex items-center justify-center"
-            aria-label={isSelected ? `Deselect ${item?.title || itemId}` : `Select ${item?.title || itemId}`}
-          >
-            {isSelected ? (
-              <CheckSquare className="h-4 w-4 text-primary" />
-            ) : (
-              <Square className="h-4 w-4 text-gray-400" />
-            )}
-          </button>
-        </td>
-        {columns.map((column) => {
-          const cellValue = item[column.key] || ''
-          
-          if (column.render) {
-            return (
-              <td key={column.key} className={`py-3 px-6 ${column.width || ''}`}>
-                {column.render(item)}
-              </td>
-            )
-          }
-          
-          if (column.key === 'status' && item.status) {
-            return (
-              <td key={column.key} className={`py-3 px-6 ${column.width || ''}`}>
-                {getStatusBadge(item.status)}
-              </td>
-            )
-          }
-          
-          return (
-            <td 
-              key={column.key} 
-              className={`py-3 px-6 text-gray-800 ${column.width || ''} ${column.truncate ? 'truncate' : ''} ${column.fontMedium ? 'font-medium' : ''}`}
-            >
-              {cellValue}
-            </td>
-          )
-        })}
-        
-        {actionsColumn && (
-          <td className="py-3 px-6 w-16" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-              onClick={(e) => {
-                e.stopPropagation()
-              }}
-              aria-label={`More actions for ${item?.title || itemId}`}
-            >
-              <MoreHorizontal className="w-4 h-4 text-gray-600" />
-            </button>
-          </td>
-        )}
-      </tr>
-    )
-  })
+  const mobilePageNumbers = useMemo(() => {
+    const totalPages = paginationData?.totalPages || 1
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1)
+    }
+    if (currentPage <= 2) return [1, 2, '...', totalPages]
+    if (currentPage >= totalPages - 1) return [1, '...', totalPages - 1, totalPages]
+    return [1, '...', currentPage, '...', totalPages]
+  }, [currentPage, paginationData?.totalPages])
 
   return (
     <div>
@@ -209,7 +235,7 @@ const AdminTableWithBulk = ({
       {selectedItems.length > 0 ? (<div className="bg-primary/10  rounded-lg p-4 mb-4 flex items-center justify-between min-h-[60px]">
             <div className="flex items-center gap-2">
               {/* <CheckSquare className="h-5 w-5 text-primary" /> */}
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-xs md:text-base text-gray-900">
                 {selectedItems.length} item(s) selected
               </span>
             </div>
@@ -252,12 +278,19 @@ const AdminTableWithBulk = ({
           </div>
       )}
 
-      <div className="overflow-hidden shadow-sm rounded-lg relative h-[25rem]">
+      <div className="overflow-hidden shadow-sm rounded-lg relative min-h-[max-content] h-[18rem] md:h-[25rem]">
         <div className="overflow-y-auto">
           <table key={currentPage} className="w-full table-fixed">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 text-sm text-black66">
                 <th className="text-left py-4 px-6 font-semibold text-gray-700 w-12">
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    className="flex items-center justify-center"
+                    aria-label={selectAll ? 'Deselect all rows' : 'Select all rows'}
+                  >
+                <th className="text-left py-2 px-3 md:py-4 md:px-6 font-semibold text-gray-700 w-12">
                   <button
                     type="button"
                     onClick={toggleSelectAll}
@@ -274,35 +307,46 @@ const AdminTableWithBulk = ({
                 {columns.map((column) => (
                   <th 
                     key={column.key}
-                    className={`text-left py-4 px-6 font-semibold text-gray-700 ${column.width || ''}`}
+                    className={`text-left py-2 px-3 md:py-4 md:px-6 font-semibold text-gray-700 ${column.width || ''}`}
                   >
                     {column.label}
                   </th>
                 ))}
                 {actionsColumn && (
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700 w-16"></th>
+                  <th className="text-left py-2 px-3 md:py-4 md:px-6 font-semibold text-gray-700 w-16"></th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((item, index) => (
-                <TableRow 
-                  key={`${item.id || item._id}-${currentPage}-${index}`} 
-                  item={item} 
-                  index={index} 
-                />
-              ))}
+              {currentItems.map((item, index) => {
+                const itemId = item.id || item._id
+                return (
+                  <AdminBulkTableRow
+                    key={`${itemId}-${currentPage}-${index}`}
+                    item={item}
+                    index={index}
+                    columns={columns}
+                    getStatusBadge={getStatusBadge}
+                    onRowClick={onRowClick}
+                    actionsColumn={actionsColumn}
+                    getRowActions={getRowActions}
+                    isSelected={selectedItems.includes(itemId)}
+                    onToggleRow={toggleItem}
+                  />
+                )
+              })}
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-black66 py-3 text-right px-6">
-          Showing {paginationData.startIndex + 1}-{Math.min(paginationData.endIndex, paginationData.totalItems)} of {paginationData.totalItems} items
-        </p>
       </div>
+
+      <p className="text-xs text-black66 py-3 text-right px-6">
+        Showing {paginationData.startIndex + 1}-{Math.min(paginationData.endIndex, paginationData.totalItems)} of {paginationData.totalItems} items
+      </p>
 
       {/* Pagination */}
       <div className="mt-7 w-full px-6 pb-6">
-        <div className="flex-itc-jub space-x-2">
+        <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={handlePrevious}
@@ -312,7 +356,7 @@ const AdminTableWithBulk = ({
             Previous
           </button>
           
-          <div className="flex items-center gap-x-2">
+          <div className="hidden md:flex items-center gap-x-2">
             {pageNumbers.map((page, index) => (
               page === '...' ? (
                 <span key={index} className="px-2 text-gray-500">...</span>
@@ -322,6 +366,27 @@ const AdminTableWithBulk = ({
                   key={index}
                   onClick={() => handlePageChange(page)}
                   className={`w-8 h-8 text-sm font-medium rounded-lg flex items-center justify-center transition-colors ${
+                    page === currentPage
+                      ? 'bg-primary text-white'
+                      : 'text-gray-500 bg-white border border-black33 hover:bg-gray-50 hover:text-gray-700'
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            ))}
+          </div>
+
+          <div className="flex md:hidden items-center gap-x-1">
+            {mobilePageNumbers.map((page, index) => (
+              page === '...' ? (
+                <span key={`mobile-ellipsis-${index}`} className="px-1 text-gray-500">...</span>
+              ) : (
+                <button
+                  type="button"
+                  key={`mobile-page-${page}`}
+                  onClick={() => handlePageChange(page)}
+                  className={`min-w-8 h-8 px-2 text-xs font-medium rounded-lg flex items-center justify-center transition-colors ${
                     page === currentPage
                       ? 'bg-primary text-white'
                       : 'text-gray-500 bg-white border border-black33 hover:bg-gray-50 hover:text-gray-700'

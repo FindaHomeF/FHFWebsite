@@ -11,19 +11,67 @@ import {ButtonGS} from "./Buttons/ButtonGS"
 import { FaAngleDown } from "react-icons/fa6";
 import { GoArrowUpRight } from "react-icons/go";
 import { FaWarehouse } from "react-icons/fa";
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LuWarehouse } from "react-icons/lu";
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { User, X } from "lucide-react"
 
 const Header = () => {
   const pathname = usePathname()
   const [active, setActive] = useState(false)
   const [isDesktopProductsOpen, setIsDesktopProductsOpen] = useState(false)
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false)
+  const [isSignedIn, setIsSignedIn] = useState(false)
+  const [signedInRoute, setSignedInRoute] = useState('/student')
   const desktopNavItemClass =
     "relative h-full flex items-center after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:after:scale-x-100 focus-within:after:scale-x-100"
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      const hasAccessToken = localStorage.getItem('fhf-access-token') || localStorage.getItem('access_token')
+      const hasRefreshToken = localStorage.getItem('fhf-refresh-token') || localStorage.getItem('refresh_token')
+      setIsSignedIn(Boolean(hasAccessToken || hasRefreshToken))
+
+      const storedUser = localStorage.getItem('currentUser')
+      if (!storedUser) {
+        setSignedInRoute('/student')
+        return
+      }
+
+      try {
+        const parsedUser = JSON.parse(storedUser)
+        const userRole = String(parsedUser?.role || '').toLowerCase()
+        if (userRole === 'admin' || userRole === 'support') {
+          setSignedInRoute('/admin')
+          return
+        }
+        if (userRole === 'agent') {
+          setSignedInRoute('/agent')
+          return
+        }
+        if (userRole === 'artisan') {
+          setSignedInRoute('/artisan')
+          return
+        }
+        setSignedInRoute('/student')
+      } catch {
+        setSignedInRoute('/student')
+      }
+    }
+
+    syncAuthState()
+    window.addEventListener('storage', syncAuthState)
+    window.addEventListener('focus', syncAuthState)
+    window.addEventListener('fhf-auth-cleared', syncAuthState)
+
+    return () => {
+      window.removeEventListener('storage', syncAuthState)
+      window.removeEventListener('focus', syncAuthState)
+      window.removeEventListener('fhf-auth-cleared', syncAuthState)
+    }
+  }, [])
 
   const handleTestimonialsClick = (event, closeMobileMenu = false) => {
     if (closeMobileMenu) {
@@ -51,9 +99,8 @@ const Header = () => {
 
   return (
     <div className="header-outer w-[95%] mx-auto font-medium -mb-10 md:mb-0 relative">
-      <div className="header-inner w-full flex justify-between 
-      items-center md:my-5 my-4 max-lg:-mt-6">
-        <Link href={'/'} className='w-1/6 hidden md:block'>
+      <div className="header-inner w-full flex justify-between items-center md:my-5 my-4 max-lg:-mt-6 md:flex-nowrap">
+        <Link href={'/'} className='hidden md:block md:flex-shrink-0'>
           <motion.div className="logo-container w-full " layoutId='logo-animate'>
             <Image src={Logo}
             alt="fhflogo"
@@ -74,10 +121,9 @@ const Header = () => {
           </div>
         </Link>
 
-        <div className="menu-outer w-auto hidden md:block">
-          <ul className="menu-inner h-10 px-5  uppercase gap-x-7 text-sm font-medium tracking-wide cursor-pointer flex w-full items-center">
+        <div className="menu-outer w-auto hidden md:flex md:flex-1 md:justify-center">
+          <ul className="menu-inner h-10 px-5 uppercase gap-x-7 text-sm font-medium tracking-wide cursor-pointer flex w-auto items-center justify-center">
             <Link href='/about'><li className={desktopNavItemClass}>About Us</li></Link>
-            <Link href='/contact'><li className={desktopNavItemClass}>Contact</li></Link>
             <li
               className={`z-10 relative group transition-all ease-linear duration-300 ${desktopNavItemClass} ${isDesktopProductsOpen ? 'after:scale-x-100' : ''}`}
               onMouseEnter={() => setIsDesktopProductsOpen(true)}
@@ -117,20 +163,33 @@ const Header = () => {
               </ul>
             </li>
             <Link href={'/#testimonials'} onClick={handleTestimonialsClick}><li className={desktopNavItemClass}>Testimonial</li></Link>
+            <Link href='/contact'><li className={desktopNavItemClass}>Contact</li></Link>
           </ul>
         </div>
 
-        <div className="text-base md:flex items-center gap-x-2 w-fit hidden ">
-          <Link href="/auth">
-            <Button className="bg-transparent shadow-none text-black flex 
-            items-center gap-x-2 hover:bg-transparent group h-[3.375rem] w-fit uppercase">
-              Login <GoArrowUpRight className="group-hover:animate-bounce" />
-            </Button>
-          </Link>
+        <div className="text-base md:flex items-center gap-x-2 w-fit hidden md:flex-shrink-0">
+          {isSignedIn ? (
+            <Link href={signedInRoute}>
+              <Button
+                type="button"
+                aria-label="Open dashboard"
+                className="bg-transparent shadow-none text-black flex items-center justify-center hover:bg-black10 h-10 w-10 rounded-full"
+              >
+                <User className="w-5 h-5" />
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/auth">
+              <Button className="bg-transparent shadow-none text-black flex 
+              items-center gap-x-2 hover:bg-transparent group h-[3.375rem] w-fit uppercase">
+                Login <GoArrowUpRight className="group-hover:animate-bounce" />
+              </Button>
+            </Link>
+          )}
           {/* <ButtonGS content="Explore"/> */}
           <WishlistPanel />
           <CartPanel />
-          <UserNotificationCenter />
+          {isSignedIn ? <UserNotificationCenter /> : null}
         </div>
 
         <button
@@ -147,58 +206,83 @@ const Header = () => {
 
       <div
         id="mobile-nav-menu"
-        className={`mobile-menu fixed w-screen bg-white top-0 ${active?"left-0":"left-full"} h-screen z-10 transition-all ease-linear duration-300`}
+        className={`md:hidden fixed inset-0 z-30 transition-opacity duration-300 ${active ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
       >
-        <div className="mobile-menu-inner py-16 w-5/6 space-y-10 mx-auto h-full flex flex-col justify-center items-center">
+        <button
+          type="button"
+          aria-label="Close mobile menu overlay"
+          className="absolute inset-0 bg-black/25"
+          onClick={() => setActive(false)}
+        />
+        <div className={`absolute top-0 right-0 h-full w-screen max-w-none bg-white shadow-xl transition-transform duration-300 ${active ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="px-5 py-4 border-b border-black10 flex items-center justify-between">
+            <Image src={Logo} alt="fhflogo" width={140} height={38} className="h-auto w-28" />
+            <button
+              type="button"
+              onClick={() => setActive(false)}
+              className="w-9 h-9 rounded-full border border-black10 flex items-center justify-center text-primary"
+              aria-label="Close mobile menu"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-          <div className="menu-outer w-full h-full text-center md:hidden">
-            <ul className="menu-inner font-medium uppercase flex flex-col h-full justify-evenly items-center gap-y-7">
-              <Link href={'/'} onClick={() => setActive(false)}>
-                <li>Home</li>
-              </Link>
-              <Link href={'/about'} onClick={() => setActive(false)}>
-                <li>About</li>
-              </Link>
-              <li className="z-10 relative group">
+          <nav className="px-5 py-5">
+            <ul className="space-y-2 text-sm font-semibold uppercase tracking-wide">
+              <li>
+                <Link href="/" onClick={() => setActive(false)} className="block rounded-lg px-3 py-3 hover:bg-black10">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" onClick={() => setActive(false)} className="block rounded-lg px-3 py-3 hover:bg-black10">
+                  About
+                </Link>
+              </li>
+              <li className="rounded-lg border border-black10">
                 <button
                   type="button"
-                  className="flex items-center gap-x-2"
+                  className="w-full px-3 py-3 flex items-center justify-between"
                   aria-expanded={isMobileProductsOpen}
                   aria-controls="mobile-products-menu"
                   onClick={() => setIsMobileProductsOpen((prev) => !prev)}
                 >
-                  PRODUCTS <FaAngleDown aria-hidden="true" />
+                  <span>Products</span>
+                  <FaAngleDown aria-hidden="true" className={`transition-transform duration-200 ${isMobileProductsOpen ? 'rotate-180' : ''}`} />
                 </button>
                 <ul
                   id="mobile-products-menu"
-                  className={`absolute left-1/2 transform -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg transition-all space-y-2 py-2 min-w-[180px] ${
-                    isMobileProductsOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-                  }`}
+                  className={`overflow-hidden transition-all duration-300 ${isMobileProductsOpen ? 'max-h-52 pb-2' : 'max-h-0'}`}
                 >
-                  <Link href={'/apartments'} onClick={() => setActive(false)}>
-                    <li className="px-4 py-2 hover:bg-gray-50 cursor-pointer">Apartment Listings</li>
-                  </Link>
-                  <Link href={'/service'} onClick={() => setActive(false)}>
-                    <li className="px-4 py-2 hover:bg-gray-50 cursor-pointer">Hire for a service</li>
-                  </Link>
-                  <Link href={'/decluttering'} onClick={() => setActive(false)}>
-                    <li className="px-4 py-2 hover:bg-gray-50 cursor-pointer">Decluttering</li>
-                  </Link>
+                  <li>
+                    <Link href="/apartments" onClick={() => setActive(false)} className="block px-5 py-2 text-xs text-gray-700 hover:text-primary">
+                      Apartment Listings
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/service" onClick={() => setActive(false)} className="block px-5 py-2 text-xs text-gray-700 hover:text-primary">
+                      Hire for a service
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/decluttering" onClick={() => setActive(false)} className="block px-5 py-2 text-xs text-gray-700 hover:text-primary">
+                      Decluttering
+                    </Link>
+                  </li>
                 </ul>
               </li>
-              <Link href={'/#testimonials'} onClick={(event) => handleTestimonialsClick(event, true)}><li>Testimonial</li></Link>
-              <Link href={'/contact'} onClick={() => setActive(false)}><li>Contact Us</li></Link>
+              <li>
+                <Link href="/#testimonials" onClick={(event) => handleTestimonialsClick(event, true)} className="block rounded-lg px-3 py-3 hover:bg-black10">
+                  Testimonial
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" onClick={() => setActive(false)} className="block rounded-lg px-3 py-3 hover:bg-black10">
+                  Contact Us
+                </Link>
+              </li>
             </ul>
-          </div>
-
-          <div className="logo-container w-full flex justify-center md:hidden">
-            <Image src={Logo}
-              alt="fhflogo"
-              width={200}
-              height={54}
-            />
-          </div>
-
+          </nav>
         </div>
       </div>
     </div>

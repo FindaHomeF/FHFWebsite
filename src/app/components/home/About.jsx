@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
+import { MOTION_DELAY, motionTransition } from '@/lib/motion'
 
 const CounterNumber = ({ end, duration = 2000, suffix = "+" }) => {
   const [count, setCount] = useState(0)
@@ -73,7 +74,7 @@ const About = () => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
+                  transition={motionTransition.inView()}
                   className="section-head md:w-3/6"
                 >
                     Revolutionizing Student Housing at FUTA
@@ -83,7 +84,7 @@ const About = () => {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
+                  transition={motionTransition.inView(MOTION_DELAY.block1)}
                   className="section-para md:text-base md:w-3/6 text-gray"
                 >
                     We've streamlined the entire off-campus living experience into one powerful platform. From finding verified accommodations to connecting with trusted service providers and discovering affordable essentials—everything you need is right here.
@@ -94,7 +95,7 @@ const About = () => {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={motionTransition.inView(MOTION_DELAY.block2)}
             >
                 <div className="flex justify-between max-w-full gap-x-3 items-stretch flex-shrink-0">
                     <div className="md:border-l-2 border-l border-l-black space-y-1 px-3 md:px-5 hidden md:block md:w-2/6 pt-3 hover:border-l-primary transition-colors duration-300">

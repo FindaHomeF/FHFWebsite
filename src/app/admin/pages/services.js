@@ -1,11 +1,12 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
-import { Search, Filter, Download, Plus, MoreVertical } from 'lucide-react'
+import { Search, Filter, Download, Plus, MoreVertical, Eye, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import AdminTableWithBulk from '../components/AdminTableWithBulk'
 import { useRouter } from 'next/navigation'
 
@@ -121,6 +122,7 @@ const ServicesPage = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(5)
   const [services, setServices] = useState(mockServices)
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   // Load services from localStorage after mount to avoid hydration errors
   React.useEffect(() => {
@@ -236,9 +238,39 @@ const ServicesPage = () => {
     router.push(`/admin/services/${encodeURIComponent(service.id)}`)
   }, [router])
 
+  const getRowActions = useCallback(
+    (service) => {
+      const actions = [
+        {
+          id: 'view',
+          label: 'View service',
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/services/${encodeURIComponent(service.id)}`),
+        },
+      ]
+      if (service.status === 'Pending') {
+        actions.push({
+          id: 'approval',
+          label: 'Review approval',
+          icon: <ClipboardList className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/services/approval/${encodeURIComponent(service.id)}`),
+        })
+      }
+      return actions
+    },
+    [router]
+  )
+
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
     // Add your bulk action logic here
+  }, [])
+
+  const clearFilters = useCallback(() => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setCategoryFilter('all')
+    setCurrentPage(1)
   }, [])
 
   // Define columns for the table
@@ -264,6 +296,7 @@ const ServicesPage = () => {
 
           {/* Search and Filters */}
           <div className="flex items-center gap-1.5 !text-sm">
+            <div className="hidden md:flex items-center gap-1.5 !text-sm">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
               <Input
@@ -322,12 +355,7 @@ const ServicesPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => {
-                  setSearchTerm('')
-                  setStatusFilter('all')
-                  setCategoryFilter('all')
-                  setCurrentPage(1)
-                }}>
+                <DropdownMenuItem onClick={clearFilters}>
                   <Filter className="w-4 h-4 mr-2" />
                   Clear Filters
                 </DropdownMenuItem>
@@ -337,6 +365,81 @@ const ServicesPage = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
+
+            <div className="md:hidden">
+              <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button type="button" variant="outline" className="rounded-lg flex items-center gap-2">
+                    <Filter className="w-4 h-4" />
+                    Filters
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[88%] sm:max-w-md overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Filter Services</SheetTitle>
+                    <SheetDescription>Use filters to refine service provider listings.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
+                      <Input
+                        placeholder="Search services..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value)
+                          setCurrentPage(1)
+                        }}
+                        className="pl-10 border-black10 border w-full"
+                      />
+                    </div>
+                    <Select value={statusFilter} onValueChange={(value) => {
+                      setStatusFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={categoryFilter} onValueChange={(value) => {
+                      setCategoryFilter(value)
+                      setCurrentPage(1)
+                    }}>
+                      <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="Electronics Repair">Electronics Repair</SelectItem>
+                        <SelectItem value="Cleaning">Cleaning</SelectItem>
+                        <SelectItem value="Laundry">Laundry</SelectItem>
+                        <SelectItem value="Food Service">Food Service</SelectItem>
+                        <SelectItem value="Education">Education</SelectItem>
+                        <SelectItem value="Photography">Photography</SelectItem>
+                        <SelectItem value="Beauty">Beauty</SelectItem>
+                        <SelectItem value="Printing">Printing</SelectItem>
+                        <SelectItem value="Tailoring">Tailoring</SelectItem>
+                        <SelectItem value="Plumbing">Plumbing</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="pt-3 flex gap-2">
+                      <Button type="button" variant="outline" className="flex-1" onClick={clearFilters}>
+                        Clear
+                      </Button>
+                      <Button type="button" className="flex-1" onClick={() => setIsMobileFiltersOpen(false)}>
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </div>
@@ -355,6 +458,7 @@ const ServicesPage = () => {
           statusBadgeStyles={statusBadgeStyles}
           getStatusBadge={getStatusBadge}
           onRowClick={handleRowClick}
+          getRowActions={getRowActions}
           bulkActions={['approve', 'reject', 'delete', 'export']}
           onBulkAction={handleBulkAction}
         />

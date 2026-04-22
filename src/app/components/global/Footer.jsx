@@ -36,11 +36,11 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-gray-600">
                 <MapPin size={18} className="text-primary flex-shrink-0" />
-                <span className="text-sm">North Gate, Akure, Ondo State</span>
+                <span className="text-sm">Akure, Ondo State</span>
               </div>
               <div className="flex items-center gap-3 text-gray-600">
                 <Phone size={18} className="text-primary flex-shrink-0" />
-                <span className="text-sm">+234 123 456 7890</span>
+                <span className="text-sm">+234 813 531 8003</span>
               </div>
               <div className="flex items-center gap-3 text-gray-600">
                 <Mail size={18} className="text-primary flex-shrink-0" />

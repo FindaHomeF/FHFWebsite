@@ -7,9 +7,9 @@ import NotificationCenter from '../components/NotificationCenter';
 export default function AdminHeader({ onMenuClick, breadcrumbs = ['Dashboards', 'Home'] }) {
   return (
     <header className="bg-gray-100 border-b border-black10">
-      <div className="flex items-center justify-between h-16 px-6">
+      <div className="flex items-center justify-between h-16 md:px-6">
         {/* Left side */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center md:space-x-6">
           <Button
             variant="ghost"
             size="sm"

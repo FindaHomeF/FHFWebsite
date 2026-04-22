@@ -16,7 +16,7 @@ export default function RevenueChart() {
   ];
 
   return (
-    <div className="bg-white rounded-2xl p-8 py-5 shadow-sm relative">
+    <div className="bg-white rounded-2xl p-2 md:p-8 md:py-5 shadow-sm relative">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -95,7 +95,7 @@ export default function RevenueChart() {
       
       
       {/* Chart Container - Using CSS-based chart to avoid Recharts selector issues */}
-      <div className="bg-gray-50/50 rounded-2xl p-6">
+      <div className="bg-gray-50/50 rounded-2xl p-2 md:p-6">
         <div className="h-80 w-full relative">
           {/* Chart Area */}
           <div className="absolute inset-0 flex items-end justify-between px-4 pb-8">

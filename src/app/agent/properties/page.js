@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Filter, Download, Plus, MoreHorizontal } from 'lucide-react'
+import { Search, Filter, Download, Plus, MoreHorizontal, TrendingUp, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -132,6 +132,24 @@ export default function AgentPropertiesPage() {
     
     return pages
   }, [paginationData.totalPages, currentPage])
+
+  const getRowActions = useCallback(
+    (item) => [
+      {
+        id: 'analytics',
+        label: 'View analytics',
+        icon: <TrendingUp className="h-4 w-4" />,
+        onClick: () => router.push(`/agent/analytics/property/${encodeURIComponent(item.id)}`),
+      },
+      {
+        id: 'details',
+        label: 'View details',
+        icon: <Eye className="h-4 w-4" />,
+        onClick: () => router.push(`/agent/properties/${encodeURIComponent(item.id)}`),
+      },
+    ],
+    [router]
+  )
 
   const handleBulkAction = useCallback((action, selectedIds) => {
     try {
@@ -279,6 +297,7 @@ export default function AgentPropertiesPage() {
           onRowClick={handleRowClick}
           bulkActions={['activate', 'deactivate', 'delete', 'export']}
           onBulkAction={handleBulkAction}
+          getRowActions={getRowActions}
         />
       </div>
     </div>

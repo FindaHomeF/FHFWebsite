@@ -1,11 +1,12 @@
 'use client'
 import React, { useState, useMemo, useCallback, memo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Filter, MoreHorizontal, Download, ChevronDown, Plus } from 'lucide-react'
+import { Search, Filter, MoreHorizontal, Download, ChevronDown, Plus, Eye, Pencil, ClipboardList } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import AdminTableWithBulk from '../components/AdminTableWithBulk'
 
 // Mock data for decluttered items
@@ -238,6 +239,7 @@ export default function ItemsPage() {
   const [itemsPerPage] = useState(5)
   const [mounted, setMounted] = useState(false)
   const [items, setItems] = useState(mockItems)
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   // Load items from localStorage after mount to avoid hydration errors
   React.useEffect(() => {
@@ -379,13 +381,50 @@ export default function ItemsPage() {
     router.push(`/admin/items/${encodeURIComponent(item.id)}`)
   }, [router])
 
+  const getRowActions = useCallback(
+    (item) => {
+      const actions = [
+        {
+          id: 'view',
+          label: 'View item',
+          icon: <Eye className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/items/${encodeURIComponent(item.id)}`),
+        },
+        {
+          id: 'edit',
+          label: 'Edit item',
+          icon: <Pencil className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/items/edit/${encodeURIComponent(item.id)}`),
+        },
+      ]
+      if (item.status === 'Pending') {
+        actions.push({
+          id: 'approval',
+          label: 'Review approval',
+          icon: <ClipboardList className="h-4 w-4" />,
+          onClick: () => router.push(`/admin/items/approval/${encodeURIComponent(item.id)}`),
+        })
+      }
+      return actions
+    },
+    [router]
+  )
+
   const handleBulkAction = useCallback((action, selectedIds) => {
     console.log('Bulk action:', action, selectedIds)
     // Add your bulk action logic here
   }, [])
 
+  const clearFilters = useCallback(() => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setCategoryFilter('all')
+    setConditionFilter('all')
+    setCurrentPage(1)
+  }, [])
+
   return (
-    <div className="space-y-6 px-6">
+    <div className="space-y-6 px-6 pt-6">
       {/* Page Header */}
       <div className="flex justify-between items-center ">
         <div>
@@ -395,7 +434,8 @@ export default function ItemsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-lg">
-        <div className="flex gap-2 justify-end items-center">
+        <div className="flex gap-2 justify-between md:justify-end items-center">
+          <div className="hidden md:flex gap-2 justify-end items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
             <Input
@@ -409,7 +449,10 @@ export default function ItemsPage() {
             />
           </div>
           
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => {
+            setStatusFilter(value)
+            setCurrentPage(1)
+          }}>
             <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -421,7 +464,10 @@ export default function ItemsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <Select value={categoryFilter} onValueChange={(value) => {
+            setCategoryFilter(value)
+            setCurrentPage(1)
+          }}>
             <SelectTrigger  className="w-36 bg-black10 border-none shadow-none rounded-lg">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -435,7 +481,10 @@ export default function ItemsPage() {
             </SelectContent>
           </Select>
 
-          <Select value={conditionFilter} onValueChange={setConditionFilter}>
+          <Select value={conditionFilter} onValueChange={(value) => {
+            setConditionFilter(value)
+            setCurrentPage(1)
+          }}>
             <SelectTrigger className="w-32 bg-black10 border-none shadow-none rounded-lg">
               <SelectValue placeholder="Condition" />
             </SelectTrigger>
@@ -457,6 +506,91 @@ export default function ItemsPage() {
               <Filter className="w-4 h-4 mr-2" />
               More
             </Button>
+          </div>
+          </div>
+
+          <div className="md:hidden">
+            <Sheet open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+              <SheetTrigger asChild>
+                <Button type="button" variant="outline" className="rounded-lg flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[88%] sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Filter Items</SheetTitle>
+                  <SheetDescription>Refine item listings with search and filter options.</SheetDescription>
+                </SheetHeader>
+                <div className="mt-6 space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-black33" />
+                    <Input
+                      placeholder="Search items..."
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value)
+                        setCurrentPage(1)
+                      }}
+                      className="pl-10 border-black10 border w-full"
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={(value) => {
+                    setStatusFilter(value)
+                    setCurrentPage(1)
+                  }}>
+                    <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={categoryFilter} onValueChange={(value) => {
+                    setCategoryFilter(value)
+                    setCurrentPage(1)
+                  }}>
+                    <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="Furniture">Furniture</SelectItem>
+                      <SelectItem value="Electronics">Electronics</SelectItem>
+                      <SelectItem value="Books">Books</SelectItem>
+                      <SelectItem value="Appliances">Appliances</SelectItem>
+                      <SelectItem value="Room Decor">Room Decor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={conditionFilter} onValueChange={(value) => {
+                    setConditionFilter(value)
+                    setCurrentPage(1)
+                  }}>
+                    <SelectTrigger className="w-full bg-black10 border-none shadow-none rounded-lg">
+                      <SelectValue placeholder="Condition" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Conditions</SelectItem>
+                      <SelectItem value="Excellent">Excellent</SelectItem>
+                      <SelectItem value="Good">Good</SelectItem>
+                      <SelectItem value="Fair">Fair</SelectItem>
+                      <SelectItem value="Poor">Poor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="pt-3 flex gap-2">
+                    <Button type="button" variant="outline" className="flex-1" onClick={clearFilters}>
+                      Clear
+                    </Button>
+                    <Button type="button" className="flex-1" onClick={() => setIsMobileFiltersOpen(false)}>
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
 
           <Button 
@@ -489,6 +623,7 @@ export default function ItemsPage() {
           statusBadgeStyles={statusBadgeStyles}
           getStatusBadge={getStatusBadge}
           onRowClick={handleRowClick}
+          getRowActions={getRowActions}
           bulkActions={['approve', 'reject', 'delete', 'export']}
           onBulkAction={handleBulkAction}
         />

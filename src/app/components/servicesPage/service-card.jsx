@@ -5,6 +5,7 @@ import { IoBookmarksOutline, IoBookmarks } from 'react-icons/io5'
 import { LiaShareAltSolid } from "react-icons/lia";
 import { useWishlist } from '@/contexts/WishlistContext';
 import Link from 'next/link';
+import { MOTION_INTERACTION_CLASS } from '@/lib/motion'
 
 const ServiceCard = ({ service = null }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -38,8 +39,8 @@ const ServiceCard = ({ service = null }) => {
   };
 
   return (
-    <div className='w-full bg-grayBg py-5 md:py-10 px-3 md:px-4
-    border border-black/20 rounded-xl flex-shrink-0'>
+    <div className={`w-full bg-grayBg py-5 md:py-10 px-3 md:px-4
+    border border-black/20 rounded-xl flex-shrink-0 overflow-visible transition-all ${MOTION_INTERACTION_CLASS} hover:-translate-y-1 hover:shadow-lg`}>
         <div className='relative w-20 h-20 md:w-32 md:h-32 mx-auto
         bg-lighterGray rounded-full'>
             <div className='absolute bottom-0 md:bottom-[0.4rem] right-4 

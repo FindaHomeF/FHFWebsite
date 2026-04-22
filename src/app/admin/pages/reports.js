@@ -103,14 +103,14 @@ export default function ReportsPage() {
     <div className="space-y-6 pb-12">
       <div className="bg-white rounded-lg shadow-sm">
         {/* Header Section with Title and Generate Button */}
-        <div className="flex items-center justify-between sticky top-0 bg-white z-10 pb-6 pt-4 border-b border-black10 px-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-            <p className="text-sm text-gray-600 mt-1">Generate and download comprehensive reports</p>
-        </div>
+        <div className="md:flex items-center justify-between sticky top-0 bg-white z-10 pb-6 pt-4 border-b border-black10 px-6">
+          <div className='block'>
+            <h1 className="text-2xl font-bold text-gray-900">Reports & Analytics</h1>
+              <p className="text-sm text-gray-600 mt-1">Generate and download comprehensive reports</p>
+          </div>
           <Button 
             onClick={handleGenerateReport} 
-            className="bg-primary hover:bg-primary/90 flex items-center gap-2"
+            className="bg-primary hover:bg-primary/90 flex items-center gap-2 mt-3 md:mt-0"
           >
             <FileText className="w-4 h-4" />
           Generate New Report
@@ -189,32 +189,32 @@ export default function ReportsPage() {
             <div className="divide-y divide-black10">
           {filteredReports?.map((report) => (
                 <div key={report.id} className="py-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-                    <report.icon className="w-6 h-6 text-gray-600" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900">{report.title}</h4>
-                    <p className="text-sm text-gray-500">{report.period}</p>
-                    <p className="text-xs text-gray-400">
-                      Generated: {report.generatedDate} • Size: {report.size}
-                    </p>
-                  </div>
-                </div>
+                  <div className="md:flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                        <report.icon className="w-6 h-6 text-gray-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-medium text-gray-900">{report.title}</h4>
+                        <p className="text-sm text-gray-500">{report.period}</p>
+                        <p className="text-xs text-gray-400">
+                          Generated: {report.generatedDate} • Size: {report.size}
+                        </p>
+                      </div>
+                    </div>
                 
-                    <div className="flex items-center gap-3">
-                  {getStatusBadge(report.status)}
-                  {report.status === 'completed' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownloadReport(report.id)}
-                          className="flex items-center gap-2"
-                    >
-                          <Download className="w-4 h-4" />
-                      Download
-                    </Button>
+                    <div className="flex items-center gap-3 mt-5 md:mt-0 place-self-end">
+                      {getStatusBadge(report.status)}
+                      {report.status === 'completed' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownloadReport(report.id)}
+                            className="flex items-center gap-2"
+                      >
+                            <Download className="w-4 h-4" />
+                        Download
+                      </Button>
                   )}
                 </div>
               </div>

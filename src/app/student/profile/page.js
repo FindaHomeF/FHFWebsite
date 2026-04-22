@@ -173,7 +173,7 @@ export default function StudentProfilePage() {
   }
 
   return (
-    <div className="space-y-6 px-6 pb-6">
+    <div className="space-y-6 pb-6">
       <div className="bg-white rounded-lg shadow-sm">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile Management</h1>

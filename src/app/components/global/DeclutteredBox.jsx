@@ -8,6 +8,7 @@ import Link from "next/link";
 import WishlistBtn from "./Buttons/WishlistBtn";
 import ShareButton from "./Buttons/ShareButton";
 import { useCart } from "@/contexts/CartContext";
+import { MOTION_INTERACTION_CLASS } from '@/lib/motion'
 
 
 const DeclutteredBox = ({image, border, item = null, itemIndex = 0}) => {
@@ -38,8 +39,8 @@ const DeclutteredBox = ({image, border, item = null, itemIndex = 0}) => {
   };
 
   return (
-    <div className={`declutter-box-outer group bg-grayBg rounded-2xl overflow-hidden w-full ${border && 'border border-borderGray'} shadow-sm shadow-borderOpacity ${isOutOfStock ? 'opacity-60' : ''}`}>
-        <div className="w-full rounded-lg overflow-hidden h-[14rem] relative">
+    <div className={`declutter-box-outer group bg-grayBg rounded-2xl overflow-visible w-full transition-all ${MOTION_INTERACTION_CLASS} hover:-translate-y-1 hover:shadow-lg ${border && 'border border-borderGray'} shadow-sm shadow-borderOpacity ${isOutOfStock ? 'opacity-60' : ''}`}>
+        <div className="w-full rounded-t-2xl overflow-hidden h-[14rem] relative">
             <Link
             href={`/decluttering/${displayItem.itemId || 1}`}
             >
@@ -48,9 +49,9 @@ const DeclutteredBox = ({image, border, item = null, itemIndex = 0}) => {
                 width={300}
                 height={220}
                 alt='declutter-media-representation'
-                className="object-cover w-full h-full 
+                className={`object-cover w-full h-full 
                 group-hover:scale-105 transition-all 
-                ease-linear duration-300"
+                ${MOTION_INTERACTION_CLASS}`}
                 />
             </Link>
             
@@ -66,7 +67,7 @@ const DeclutteredBox = ({image, border, item = null, itemIndex = 0}) => {
               </Button>
             )}
         </div>
-        <div className='text-center space-y-2 py-5 font-medium px-3'>
+        <div className='text-center space-y-2 py-5 font-medium px-3 rounded-b-2xl bg-grayBg'>
             <Link
                 href={`/decluttering/${displayItem.itemId || 1}`}
             >

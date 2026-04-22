@@ -1,12 +1,12 @@
 'use client'
 import React, { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, MoreVertical, Edit, Trash2, Eye, Package, Archive, RotateCcw } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, Eye, Package, Archive, RotateCcw, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { RowActionsMenu } from '@/components/ui/row-actions-menu'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useDeleteDeclutteringListing, useRestoreDeclutteringListing, useSoftDeleteDeclutteringListing } from '@/lib/mutations'
@@ -281,54 +281,67 @@ export default function StudentDeclutteringPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(viewMode === 'archived' ? 'Archived' : item.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/decluttering/${item.id}`)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            View
-                          </DropdownMenuItem>
-                          {viewMode !== 'archived' ? (
-                            <>
-                              <DropdownMenuItem onClick={() => router.push(`/student/decluttering/edit/${item.id}`)}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => requestArchive(item.id)}
-                                className="text-amber-700"
-                                disabled={isArchiving}
-                              >
-                                <Archive className="w-4 h-4 mr-2" />
-                                Archive
-                              </DropdownMenuItem>
-                            </>
-                          ) : (
-                            <>
-                              <DropdownMenuItem
-                                onClick={() => requestRestore(item.id)}
-                                disabled={isRestoring}
-                              >
-                                <RotateCcw className="w-4 h-4 mr-2" />
-                                Restore
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => requestPermanentDelete(item.id)}
-                                className="text-red-600"
-                                disabled={isDeleting}
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Permanently
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap" data-row-actions>
+                      <RowActionsMenu
+                        actions={
+                          viewMode !== 'archived'
+                            ? [
+                                {
+                                  id: 'analytics',
+                                  label: 'View analytics',
+                                  icon: <TrendingUp className="h-4 w-4" />,
+                                  onClick: () =>
+                                    router.push(`/student/analytics/item/${encodeURIComponent(item.id)}`),
+                                },
+                                {
+                                  id: 'view',
+                                  label: 'View',
+                                  icon: <Eye className="h-4 w-4" />,
+                                  onClick: () => router.push(`/decluttering/${item.id}`),
+                                },
+                                {
+                                  id: 'edit',
+                                  label: 'Edit',
+                                  icon: <Edit className="h-4 w-4" />,
+                                  onClick: () => router.push(`/student/decluttering/edit/${item.id}`),
+                                },
+                                {
+                                  id: 'archive',
+                                  label: 'Archive',
+                                  icon: <Archive className="h-4 w-4" />,
+                                  onClick: () => !isArchiving && requestArchive(item.id),
+                                },
+                              ]
+                            : [
+                                {
+                                  id: 'analytics',
+                                  label: 'View analytics',
+                                  icon: <TrendingUp className="h-4 w-4" />,
+                                  onClick: () =>
+                                    router.push(`/student/analytics/item/${encodeURIComponent(item.id)}`),
+                                },
+                                {
+                                  id: 'view',
+                                  label: 'View',
+                                  icon: <Eye className="h-4 w-4" />,
+                                  onClick: () => router.push(`/decluttering/${item.id}`),
+                                },
+                                {
+                                  id: 'restore',
+                                  label: 'Restore',
+                                  icon: <RotateCcw className="h-4 w-4" />,
+                                  onClick: () => !isRestoring && requestRestore(item.id),
+                                },
+                                {
+                                  id: 'delete',
+                                  label: 'Delete permanently',
+                                  icon: <Trash2 className="h-4 w-4" />,
+                                  destructive: true,
+                                  onClick: () => !isDeleting && requestPermanentDelete(item.id),
+                                },
+                              ]
+                        }
+                      />
                     </td>
                   </tr>
                 ))}

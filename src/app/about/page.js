@@ -8,6 +8,8 @@ import Footer from "../components/global/Footer"
 import FooterCta from "../components/global/FooterCta"
 import Header from "../components/global/Header"
 import Testimonials from "../components/home/Testimonials"
+import RevealOnScroll from "@/components/ui/reveal-on-scroll"
+import { motionSectionDelay } from '@/lib/motion'
 
 
 const page = () => {
@@ -16,13 +18,13 @@ const page = () => {
         <Header/>
         <main className="space-y-16 md:space-y-16 pt-3 md:pt-16">
             <Hero/>
-            <Revolution/>
-            <Mission/>
-            <Values/>
-            <Team/>
-            <Mad/>
-            <Testimonials/>
-            <FooterCta/>
+            <RevealOnScroll><Revolution/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(3)}><Mission/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(5)}><Values/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(6)}><Team/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(7)}><Mad/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(8)}><Testimonials/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(9)}><FooterCta/></RevealOnScroll>
         </main>
         <footer>
           <Footer/>

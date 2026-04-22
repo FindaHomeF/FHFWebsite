@@ -1,6 +1,7 @@
 "use client"
 import { useState } from 'react'
 import { motion, useMotionValue, useSpring } from 'framer-motion'
+import { motionTransition } from '@/lib/motion'
 
 const MouseFollowIcon = ({ children, icon: Icon, iconSize = 20, iconColor = "var(--secondary)" }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -43,10 +44,7 @@ const MouseFollowIcon = ({ children, icon: Icon, iconSize = 20, iconColor = "var
                         opacity: isHovered ? 1 : 0, 
                         scale: isHovered ? 1 : 0 
                     }}
-                    transition={{ 
-                        duration: 0.2,
-                        ease: "easeOut"
-                    }}
+                    transition={motionTransition.micro()}
                 >
                     <div className="bg-white border-2 border-secondary p-2 rounded-full shadow-lg">
                         <Icon size={iconSize} color={iconColor} />

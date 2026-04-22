@@ -4,7 +4,8 @@ import {
   Home, 
   Briefcase, 
   Wallet, 
-  User
+  User,
+  CalendarDays,
 } from 'lucide-react';
 import Image from "next/image"
 import { useArtisan } from '../context/ArtisanContext'
@@ -12,6 +13,7 @@ import { useArtisan } from '../context/ArtisanContext'
 const navigation = [
   { name: 'Home', href: '/artisan', icon: Home },
   { name: 'My Services', href: '/artisan/services', icon: Briefcase, requiresApproval: true },
+  { name: 'Bookings', href: '/artisan/bookings', icon: CalendarDays },
   { name: 'Payments & Transactions', href: '/artisan/payments', icon: Wallet },
   { name: 'Profile', href: '/artisan/profile', icon: User },
 ];

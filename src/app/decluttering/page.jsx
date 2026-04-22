@@ -7,6 +7,8 @@ import FooterCta from '../components/global/FooterCta'
 import Header from '../components/global/Header'
 import Hero from '../components/global/Hero'
 import Testimonials from '../components/home/Testimonials'
+import RevealOnScroll from '@/components/ui/reveal-on-scroll'
+import { motionSectionDelay } from '@/lib/motion'
 
 const page = () => {
   return (
@@ -16,17 +18,17 @@ const page = () => {
             <Hero
                 placeholder={'Search furniture, appliances, books, and more...'}
                 mainText={'Student Marketplace'}
-                subText={'Buy quality pre-owned items or sell what you don\'t need. Save money, help the environment, connect with fellow students.'}
-                btn1={'Sell Your Items'}
+                subText={'Sell items you no longer need and discover affordable pre-owned essentials from trusted FUTA students.'}
+                btn1={'List an Item'}
                 btn2={'Browse Categories'}  
                 cta2='#categories'
             />
-            <Recent/>
-            <Featured/>
-            <DCategories/>
-            <How/>
-            <Testimonials/>
-            <FooterCta/>
+            <RevealOnScroll><Recent/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(3)}><Featured/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(5)}><DCategories/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(6)}><How/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(7)}><Testimonials/></RevealOnScroll>
+            <RevealOnScroll delay={motionSectionDelay(9)}><FooterCta/></RevealOnScroll>
         </main>
         <footer>
           <Footer/>

@@ -1,27 +1,11 @@
-import { Mulish } from "next/font/google";
 import "./globals.css";
-import { Abhaya_Libre } from 'next/font/google';
 import ToasterProvider from './components/global/ToasterProvider';
 import { WishlistProvider } from '@/contexts/WishlistContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { DataProvider } from '@/contexts/DataContext';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import AuthSessionGuard from '@/components/providers/AuthSessionGuard';
-
-// Initialize the font with desired subsets and weights
-const mulish = Mulish({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-  variable: '--font-mulish',
-});
-
-export const abhayaLibre = Abhaya_Libre({
-  weight: '800', // ExtraBold weight
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-abhaya-libre',
-});
+import { mulish } from '@/lib/fonts';
 
 export const metadata = {
   title: "Find-a-Home FUTA | Your Trusted Student Housing Platform",

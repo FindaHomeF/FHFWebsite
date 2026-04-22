@@ -1,12 +1,12 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, MoreVertical, Edit, Trash2, Eye } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, Eye, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { RowActionsMenu } from '@/components/ui/row-actions-menu'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { Building2 } from 'lucide-react'
@@ -147,31 +147,37 @@ export default function StudentPropertiesPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStatusBadge(property.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.push(`/sp/${property.id}`)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            View
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => router.push(`/student/properties/edit/${property.id}`)}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => requestDelete(property.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap" data-row-actions>
+                      <RowActionsMenu
+                        actions={[
+                          {
+                            id: 'analytics',
+                            label: 'View analytics',
+                            icon: <TrendingUp className="h-4 w-4" />,
+                            onClick: () =>
+                              router.push(`/student/analytics/property/${encodeURIComponent(property.id)}`),
+                          },
+                          {
+                            id: 'view',
+                            label: 'View',
+                            icon: <Eye className="h-4 w-4" />,
+                            onClick: () => router.push(`/sp/${property.id}`),
+                          },
+                          {
+                            id: 'edit',
+                            label: 'Edit',
+                            icon: <Edit className="h-4 w-4" />,
+                            onClick: () => router.push(`/student/properties/edit/${property.id}`),
+                          },
+                          {
+                            id: 'delete',
+                            label: 'Delete',
+                            icon: <Trash2 className="h-4 w-4" />,
+                            destructive: true,
+                            onClick: () => requestDelete(property.id),
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))}

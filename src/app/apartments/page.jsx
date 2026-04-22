@@ -7,6 +7,8 @@ import FooterCta from '../components/global/FooterCta'
 import Header from '../components/global/Header'
 import Hero from '../components/global/Hero'
 import Testimonials from '../components/home/Testimonials'
+import RevealOnScroll from '@/components/ui/reveal-on-scroll'
+import { motionSectionDelay } from '@/lib/motion'
 
 const page = () => {
   return (
@@ -21,11 +23,11 @@ const page = () => {
               btn2={'Browse Categories'}
               cta2='#categories'
           />
-          <Available/>
-          <Premium/>
-          <Categories/>
-          <Testimonials/>
-          <FooterCta/>
+          <RevealOnScroll><Available/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(3)}><Premium/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(5)}><Categories/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(7)}><Testimonials/></RevealOnScroll>
+          <RevealOnScroll delay={motionSectionDelay(9)}><FooterCta/></RevealOnScroll>
         </main>
         <footer>
           <Footer/>

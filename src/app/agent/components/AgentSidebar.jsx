@@ -5,7 +5,8 @@ import {
   Building2, 
   Package, 
   Wallet, 
-  User
+  User,
+  CalendarDays,
 } from 'lucide-react';
 import Image from "next/image"
 import { useAgent } from '../context/AgentContext'
@@ -14,6 +15,7 @@ const navigation = [
   { name: 'Home', href: '/agent', icon: Home },
   { name: 'Properties', href: '/agent/properties', icon: Building2 },
   { name: 'Decluttered Items', href: '/agent/items', icon: Package, requiresApproval: true },
+  { name: 'Bookings', href: '/agent/bookings', icon: CalendarDays },
   { name: 'Payments & Escrow', href: '/agent/payments', icon: Wallet },
   { name: 'Profile', href: '/agent/profile', icon: User },
 ];

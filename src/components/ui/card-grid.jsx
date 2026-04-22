@@ -28,7 +28,7 @@ const CardGrid = ({
   }
 
   // For flexible card widths on mobile
-  const gridClasses = `grid ${getGridCols()} ${gap} ${className}`
+  const gridClasses = `grid ${getGridCols()} ${gap} py-2 ${className}`
 
   return (
     <div className={`w-[90%] max-w-full mx-auto ${containerClassName}`}>
@@ -47,8 +47,8 @@ export const CardScroll = ({
 }) => {
   return (
     <div className={`w-[90%] max-w-full mx-auto ${containerClassName}`}>
-      <div className={`overflow-x-auto w-full`}>
-        <div className={`flex flex-nowrap md:grid md:grid-cols-4 gap-3 md:gap-5 pb-4 md:pb-0 ${className}`}>
+      <div className="overflow-x-auto w-full">
+        <div className={`flex flex-nowrap md:grid md:grid-cols-4 gap-3 md:gap-5 py-3 pb-5 md:py-2 md:pb-0 ${className}`}>
           {children}
         </div>
       </div>
