@@ -283,13 +283,6 @@ const AdminTableWithBulk = ({
           <table key={currentPage} className="w-full table-fixed">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 text-sm text-black66">
-                <th className="text-left py-4 px-6 font-semibold text-gray-700 w-12">
-                  <button
-                    type="button"
-                    onClick={toggleSelectAll}
-                    className="flex items-center justify-center"
-                    aria-label={selectAll ? 'Deselect all rows' : 'Select all rows'}
-                  >
                 <th className="text-left py-2 px-3 md:py-4 md:px-6 font-semibold text-gray-700 w-12">
                   <button
                     type="button"
