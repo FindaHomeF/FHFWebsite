@@ -503,6 +503,7 @@ export default function PropertiesPage() {
               getRowActions={getRowActions}
               bulkActions={['approve', 'reject', 'delete', 'export']}
               onBulkAction={handleBulkAction}
+              emptyMessage="No property listings match your current filters."
             />
           </div>
       </div>

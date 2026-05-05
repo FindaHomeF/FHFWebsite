@@ -14,10 +14,10 @@ const ArtisanLayoutProvider = ({ children }) => {
     const pathSegments = pathname.split('/').filter(segment => segment)
     
     if (pathSegments.length === 1 && pathSegments[0] === 'artisan') {
-      return ['Artisan Dashboard', 'Home']
+      return ['Home']
     }
     
-    const breadcrumbs = ['Artisan Dashboard']
+    const breadcrumbs = []
     
     if (pathSegments.includes('services')) {
       breadcrumbs.push('Services')
@@ -28,8 +28,12 @@ const ArtisanLayoutProvider = ({ children }) => {
       } else if (pathSegments.length > 2 && pathSegments[1] === 'services' && pathSegments[2] !== 'add') {
         breadcrumbs.push('Service Details')
       }
+    } else if (pathSegments.includes('bookings')) {
+      breadcrumbs.push('Bookings')
     } else if (pathSegments.includes('payments')) {
       breadcrumbs.push('Payments & Transactions')
+    } else if (pathSegments.includes('public-profile')) {
+      breadcrumbs.push('Public Profile View')
     } else if (pathSegments.includes('profile')) {
       breadcrumbs.push('Profile')
     } else {

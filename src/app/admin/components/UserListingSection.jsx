@@ -1,47 +1,7 @@
 'use client';
 
 export default function UserListingSection({ title, users = [] }) {
-  // Sample data to match the image
-  const sampleUsers = [
-    {
-      id: 1,
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      role: "Student"
-    },
-    {
-      id: 2,
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com", 
-      role: "Student"
-    },
-    {
-      id: 3,
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      role: "Student"
-    },
-    {
-      id: 4,
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      role: "Student"
-    },
-    {
-      id: 5,
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      role: "Student"
-    },
-    {
-      id: 6,
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      role: "Student"
-    }
-  ];
-
-  const displayUsers = users.length > 0 ? users : sampleUsers;
+  const displayUsers = Array.isArray(users) ? users : []
 
   return (
     <div className="bg-white rounded-lg p-6">
@@ -63,19 +23,27 @@ export default function UserListingSection({ title, users = [] }) {
           
           {/* Table Body */}
           <tbody className="space-y-2">
-            {displayUsers.map((user) => (
-              <tr key={user.id} className="bg-black10 text-sm text-tertiary hover:bg-gray-50 transition-colors border-b-2 border-b-white">
-                <td className="py-3 px-4">
-                  {user.name}
-                </td>
-                <td className="py-3 px-4">
-                  {user.email}
-                </td>
-                <td className="py-3 px-4">
-                  {user.role}
+            {displayUsers.length > 0 ? (
+              displayUsers.map((user) => (
+                <tr key={user.id} className="bg-black10 text-sm text-tertiary hover:bg-gray-50 transition-colors border-b-2 border-b-white">
+                  <td className="py-3 px-4">
+                    {user.name}
+                  </td>
+                  <td className="py-3 px-4">
+                    {user.email}
+                  </td>
+                  <td className="py-3 px-4">
+                    {user.role}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={3} className="px-4 py-10 text-center text-sm text-gray-500">
+                  No user records available.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

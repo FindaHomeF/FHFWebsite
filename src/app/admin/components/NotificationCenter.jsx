@@ -89,7 +89,7 @@ const NotificationCenter = () => {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:w-96">
+      <SheetContent side="right" className="w-full sm:w-96 bg-white">
         <SheetHeader>
           <div className="flex items-center justify-between">
             <SheetTitle>Notifications</SheetTitle>
@@ -111,8 +111,8 @@ const NotificationCenter = () => {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
-                    !notification.read ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
+                  className={`p-4 rounded-lg border border-black33 cursor-pointer hover:bg-gray-100 transition-colors ${
+                    !notification.read ? 'bg-gray-50' : 'bg-white'
                   }`}
                   onClick={() => markAsRead(notification.id)}
                 >

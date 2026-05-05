@@ -14,10 +14,12 @@ const AdminTable = ({
   statusBadgeStyles,
   getStatusBadge,
   onRowClick,
-  actionsColumn = true
+  actionsColumn = true,
+  emptyMessage = 'No records available.'
 }) => {
   // Get the current items based on the property name used
   const currentItems = paginationData?.currentProperties || paginationData?.currentServices || paginationData?.currentUsers || paginationData?.currentSubAdmins || paginationData?.currentTransactions || data || []
+  const hasItems = currentItems.length > 0
   
   // Row component
   const TableRow = memo(({ item, index }) => {
@@ -96,18 +98,34 @@ const AdminTable = ({
             </tr>
           </thead>
           <tbody>
-            {currentItems.map((item, index) => (
-              <TableRow 
-                key={`${item.id || item._id}-${currentPage}-${index}`} 
-                item={item} 
-                index={index} 
-              />
-            ))}
+            {hasItems ? (
+              currentItems.map((item, index) => (
+                <TableRow 
+                  key={`${item.id || item._id}-${currentPage}-${index}`} 
+                  item={item} 
+                  index={index} 
+                />
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length + (actionsColumn ? 1 : 0)}
+                  className="px-6 py-10 text-center text-sm text-gray-500"
+                >
+                  {emptyMessage}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
         </div>
         <p className="text-xs text-black66 py-3 text-right px-6">
-          Showing {paginationData.startIndex + 1}-{Math.min(paginationData.endIndex, paginationData.totalItems)} of {paginationData.totalItems} items
+          {hasItems
+            ? `Showing ${(paginationData?.startIndex ?? 0) + 1}-${Math.min(
+                paginationData?.endIndex ?? currentItems.length,
+                paginationData?.totalItems ?? currentItems.length
+              )} of ${paginationData?.totalItems ?? currentItems.length} items`
+            : 'Showing 0 of 0 items'}
         </p>
         
         

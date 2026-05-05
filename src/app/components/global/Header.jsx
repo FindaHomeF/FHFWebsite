@@ -16,7 +16,7 @@ import { LuWarehouse } from "react-icons/lu";
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, X } from "lucide-react"
+import { Heart, ShoppingCart, User, X } from "lucide-react"
 
 const Header = () => {
   const pathname = usePathname()
@@ -25,10 +25,13 @@ const Header = () => {
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false)
   const [isSignedIn, setIsSignedIn] = useState(false)
   const [signedInRoute, setSignedInRoute] = useState('/student')
+  const [isHydrated, setIsHydrated] = useState(false)
   const desktopNavItemClass =
     "relative h-full flex items-center after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 hover:after:scale-x-100 focus-within:after:scale-x-100"
 
   useEffect(() => {
+    setIsHydrated(true)
+
     const syncAuthState = () => {
       const hasAccessToken = localStorage.getItem('fhf-access-token') || localStorage.getItem('access_token')
       const hasRefreshToken = localStorage.getItem('fhf-refresh-token') || localStorage.getItem('refresh_token')
@@ -187,9 +190,34 @@ const Header = () => {
             </Link>
           )}
           {/* <ButtonGS content="Explore"/> */}
-          <WishlistPanel />
-          <CartPanel />
-          {isSignedIn ? <UserNotificationCenter /> : null}
+          {isHydrated ? (
+            <>
+              <WishlistPanel />
+              <CartPanel />
+              {isSignedIn ? <UserNotificationCenter /> : null}
+            </>
+          ) : (
+            <>
+              <Link href="/wishlist">
+                <Button
+                  variant="ghost"
+                  className="relative rounded-full w-10 h-10 p-0 border-none shadow-none"
+                  aria-label="Open wishlist"
+                >
+                  <Heart className="w-7 h-7" />
+                </Button>
+              </Link>
+              <Link href="/cart">
+                <Button
+                  variant="ghost"
+                  className="relative rounded-full w-10 h-10 p-0 border-none shadow-none"
+                  aria-label="Open cart"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <button

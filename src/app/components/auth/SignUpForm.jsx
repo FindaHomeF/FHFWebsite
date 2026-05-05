@@ -52,6 +52,7 @@ const SignUpForm = ({head, role: roleProp}) => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const isStudentSignup = role === 'student';
+    const isArtisanSignup = role === 'artisan';
     const studentIdValue = watch('studentIdNumber');
 
     const handleSignUp = async (data) => {
@@ -72,8 +73,14 @@ const SignUpForm = ({head, role: roleProp}) => {
         if (isStudentSignup) {
             payload.student_id_number = data.studentIdNumber?.trim()
         }
+        if (isArtisanSignup) {
+            payload.artisan_nin = data.artisanNin?.trim()
+        }
 
         try {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('fhf-signup-role', role)
+            }
             await registerUser(payload)
             if (typeof window !== 'undefined') {
                 localStorage.setItem('fhf-signup-email', payload.email)
@@ -126,7 +133,7 @@ const SignUpForm = ({head, role: roleProp}) => {
 
                                 <div className='w-full'>
                                     <label className='labels block text-sm text-black/70 pb-1'>First Name *</label>
-                                    <input type={'text'} {...register("fname", { required: 'First name is required' })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.fname && 'border-red-500 '}`} placeholder='John'/>
+                                    <input type={'text'} {...register("fname", { required: 'First name is required' })}  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3  ${errors.fname && 'border-red-500 '}`} placeholder='John'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.fname && 'pt-1'}`}>
                                             {errors.fname?.message}
                                     </label>
@@ -134,7 +141,7 @@ const SignUpForm = ({head, role: roleProp}) => {
 
                                 <div className='w-full'>
                                     <label className='labels block text-sm text-black/70 pb-1'>Last Name *</label>
-                                    <input type={'text'} {...register("lname", { required: 'Last name is required' })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.lname && 'border-red-500 '}`} placeholder='Doe'/>
+                                    <input type={'text'} {...register("lname", { required: 'Last name is required' })}  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3  ${errors.lname && 'border-red-500 '}`} placeholder='Doe'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.lname && 'pt-1'}`}>
                                             {errors.lname?.message}
                                     </label>
@@ -148,7 +155,7 @@ const SignUpForm = ({head, role: roleProp}) => {
                                             value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                                             message: 'Enter a valid email address',
                                         },
-                                    })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.email && 'border-red-500 '}`} placeholder='example@email.com'/>
+                                    })}  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3  ${errors.email && 'border-red-500 '}`} placeholder='example@email.com'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.email && 'pt-1'}`}>
                                             {errors.email?.message}
                                     </label>
@@ -162,7 +169,7 @@ const SignUpForm = ({head, role: roleProp}) => {
                                             value: /^(\+234\d{10}|0\d{10})$/,
                                             message: 'Use +234XXXXXXXXXX or 0XXXXXXXXXX format',
                                         },
-                                    })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3  ${errors.phone && 'border-red-500 '}`} placeholder='08012345678'/>
+                                    })}  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3  ${errors.phone && 'border-red-500 '}`} placeholder='08012345678'/>
                                     <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.phone && 'pt-1'}`}>
                                             {errors.phone?.message}
                                     </label>
@@ -178,7 +185,7 @@ const SignUpForm = ({head, role: roleProp}) => {
                                       }}
                                       onValidationChange={setStudentIdValidation}
                                       placeholder="CYS/19/0575"
-                                      className='rounded-md border border-black/40 h-[2.8rem] px-3'
+                                      className='w-full border-black10'
                                       error={errors.studentIdNumber?.message}
                                     />
                                     <input
@@ -195,6 +202,37 @@ const SignUpForm = ({head, role: roleProp}) => {
                                   </div>
                                 )}
 
+                                {isArtisanSignup && (
+                                  <div className='w-full'>
+                                    <label className='labels block text-sm text-black/70 pb-1'>NIN *</label>
+                                    <input
+                                      type='text'
+                                      inputMode='numeric'
+                                      maxLength={11}
+                                      {...register('artisanNin', {
+                                        required: 'NIN is required',
+                                        minLength: {
+                                          value: 11,
+                                          message: 'NIN must be 11 digits',
+                                        },
+                                        maxLength: {
+                                          value: 11,
+                                          message: 'NIN must be 11 digits',
+                                        },
+                                        pattern: {
+                                          value: /^\d+$/,
+                                          message: 'NIN must contain numbers only',
+                                        },
+                                      })}
+                                      className={`rounded-md border border-black10 w-full h-[2.8rem] px-3 ${errors.artisanNin && 'border-red-500 '}`}
+                                      placeholder='12345678901'
+                                    />
+                                    <label className={`text-red-500 text-xs text-right font-medium italic tracking-wide ${errors.artisanNin && 'pt-1'}`}>
+                                      {errors.artisanNin?.message}
+                                    </label>
+                                  </div>
+                                )}
+
                                 <div className='w-full relative h-fit'>
                                     <label className='labels block text-sm text-black/70 pb-1'>Password *</label>
                                     <div className='relative'>
@@ -204,7 +242,7 @@ const SignUpForm = ({head, role: roleProp}) => {
                                                 value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/,
                                                 message: 'Use 8+ chars, upper, lower, number, and special char',
                                             },
-                                        })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 relative  ${errors.password && 'border-red-500 '}`} placeholder='*******'/>
+                                        })}  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3 relative  ${errors.password && 'border-red-500 '}`} placeholder='*******'/>
                                         <button
                                           type='button'
                                           onClick={() => setShowPassword((value) => !value)}
@@ -225,7 +263,7 @@ const SignUpForm = ({head, role: roleProp}) => {
                                         <input type={showConfirmPassword ? 'text' : 'password'} {...register("confirmPassword", {
                                             required: 'Confirm your password',
                                             validate: (value) => value === watch('password') || 'Passwords do not match',
-                                        })}  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 relative  ${errors.confirmPassword && 'border-red-500 '}`} placeholder='*******'/>
+                                        })}  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3 relative  ${errors.confirmPassword && 'border-red-500 '}`} placeholder='*******'/>
                                         <button
                                           type='button'
                                           onClick={() => setShowConfirmPassword((value) => !value)}

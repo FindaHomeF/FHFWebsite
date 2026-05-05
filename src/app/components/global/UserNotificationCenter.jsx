@@ -85,7 +85,7 @@ export default function UserNotificationCenter() {
           <Bell className="w-5 h-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[400px] sm:w-[540px] flex flex-col">
+      <SheetContent side="right" className="w-[400px] sm:w-[540px] flex flex-col bg-white">
         <SheetHeader>
           <div className="flex justify-between items-center">
             <SheetTitle>Notifications</SheetTitle>
@@ -116,10 +116,10 @@ export default function UserNotificationCenter() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 rounded-lg border transition-colors ${
+                  className={`p-4 rounded-lg border border-black33 transition-colors ${
                     notification.read
-                      ? 'bg-white border-gray-200'
-                      : 'bg-primary/5 border-primary/20'
+                      ? 'bg-white'
+                      : 'bg-gray-50'
                   }`}
                 >
                   <div className="flex items-start gap-3">

@@ -14,10 +14,10 @@ const StudentLayoutProvider = ({ children }) => {
     const pathSegments = pathname.split('/').filter(segment => segment)
     
     if (pathSegments.length === 1 && pathSegments[0] === 'student') {
-      return ['Student Dashboard', 'Home']
+      return ['Home']
     }
     
-    const breadcrumbs = ['Student Dashboard']
+    const breadcrumbs = []
     
     if (pathSegments.includes('properties')) {
       breadcrumbs.push('Properties')
@@ -29,10 +29,14 @@ const StudentLayoutProvider = ({ children }) => {
       if (pathSegments.includes('add')) {
         breadcrumbs.push('Add Item')
       }
+    } else if (pathSegments.includes('bookings')) {
+      breadcrumbs.push('Bookings')
     } else if (pathSegments.includes('roommate-finder')) {
       breadcrumbs.push('Roommate Finder')
     } else if (pathSegments.includes('payments')) {
       breadcrumbs.push('Payments & Transactions')
+    } else if (pathSegments.includes('public-profile')) {
+      breadcrumbs.push('Public Profile View')
     } else if (pathSegments.includes('profile')) {
       breadcrumbs.push('Profile')
     } else {

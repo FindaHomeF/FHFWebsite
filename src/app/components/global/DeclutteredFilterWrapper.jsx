@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useMediaQuery } from '@/app/hooks/use-media-query';
 
-const DeclutteredFilterWrapper = ({ items }) => {
+const DeclutteredFilterWrapper = ({ items, scope = 'all', onScopeChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSort] = useState("popularity");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -121,6 +121,8 @@ const DeclutteredFilterWrapper = ({ items }) => {
   const FilterPanelComponent = () => (
     <DeclutteredFilterPanel
       filters={panelFilters}
+      scope={scope}
+      onScopeChange={onScopeChange}
       onFilterChange={handleFilterChange}
       onApplyFilters={handleApplyFilters}
       onClearFilters={handleClearFilters}
@@ -200,7 +202,7 @@ const DeclutteredFilterWrapper = ({ items }) => {
       <DeclutteredItemsGrid 
         items={filteredAndSortedItems}
         itemsPerPage={12}
-        title="All Decluttered Items"
+        title={scope === 'my' ? 'My Items' : 'All Items'}
       />
     </>
   );

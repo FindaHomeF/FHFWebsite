@@ -461,6 +461,7 @@ const ServicesPage = () => {
           getRowActions={getRowActions}
           bulkActions={['approve', 'reject', 'delete', 'export']}
           onBulkAction={handleBulkAction}
+          emptyMessage="No service providers match your current filters."
         />
       </div>
     </div>

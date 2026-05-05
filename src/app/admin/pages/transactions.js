@@ -514,6 +514,7 @@ const TransactionsPage = () => {
                 getRowActions={getRowActions}
                 bulkActions={['approve', 'reject', 'export']}
                 onBulkAction={handleBulkAction}
+                emptyMessage="No transactions match your current filters."
                 />
             </div>
     </div>

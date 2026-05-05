@@ -509,6 +509,7 @@ const UsersPage = () => {
           }}
           bulkActions={['approve', 'suspend', 'delete', 'export']}
           onBulkAction={handleBulkAction}
+          emptyMessage="No users match your current filters."
         />
       </div>
     </div>

@@ -3,56 +3,7 @@
 import { MoreHorizontal } from 'lucide-react';
 
 export default function TransactionListingSection({ title, transactions = [] }) {
-  // Sample data to match the image
-  const sampleTransactions = [
-    {
-      id: "#1234",
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      type: "Property",
-      amount: "₦50,000",
-      date: "12/12/2025",
-      status: "Completed"
-    },
-    {
-      id: "#1234",
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      type: "Service",
-      amount: "₦50,000",
-      date: "12/12/2025",
-      status: "Completed"
-    },
-    {
-      id: "#1234",
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      type: "Item",
-      amount: "₦50,000",
-      date: "12/12/2025",
-      status: "Pending"
-    },
-    {
-      id: "#1234",
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      type: "Item",
-      amount: "₦50,000",
-      date: "12/12/2025",
-      status: "Completed"
-    },
-    {
-      id: "#1234",
-      name: "Ifeoluwa Taiwo",
-      email: "theifeoluwa@gmail.com",
-      type: "Property",
-      amount: "₦50,000",
-      date: "12/12/2025",
-      status: "Failed"
-    }
-  ];
-
-  const displayTransactions = transactions.length > 0 ? transactions : sampleTransactions;
+  const displayTransactions = Array.isArray(transactions) ? transactions : []
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -92,40 +43,48 @@ export default function TransactionListingSection({ title, transactions = [] }) 
           
           {/* Table Body */}
           <tbody className="space-y-2">
-            {displayTransactions.map((transaction, index) => (
-              <tr key={index} className={`text-sm text-tertiary hover:bg-gray-50 transition-colors border-b-2 border-b-white ${
-                index % 2 === 0 ? 'bg-black10' : 'bg-white'
-              }`}>
-                <td className="py-3 px-4">
-                  {transaction.id}
-                </td>
-                <td className="py-3 px-4">
-                  {transaction.name}
-                </td>
-                <td className="py-3 px-4">
-                  {transaction.email}
-                </td>
-                <td className="py-3 px-4">
-                  {transaction.type}
-                </td>
-                <td className="py-3 px-4 text-secondary font-medium">
-                  {transaction.amount}
-                </td>
-                <td className="py-3 px-4">
-                  {transaction.date}
-                </td>
-                <td className="py-3 px-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
-                    {transaction.status}
-                  </span>
-                </td>
-                <td className="py-3 px-4">
-                  <button className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-                    <MoreHorizontal className="w-4 h-4 text-gray-600" />
-                  </button>
+            {displayTransactions.length > 0 ? (
+              displayTransactions.map((transaction, index) => (
+                <tr key={index} className={`text-sm text-tertiary hover:bg-gray-50 transition-colors border-b-2 border-b-white ${
+                  index % 2 === 0 ? 'bg-black10' : 'bg-white'
+                }`}>
+                  <td className="py-3 px-4">
+                    {transaction.id}
+                  </td>
+                  <td className="py-3 px-4">
+                    {transaction.name}
+                  </td>
+                  <td className="py-3 px-4">
+                    {transaction.email}
+                  </td>
+                  <td className="py-3 px-4">
+                    {transaction.type}
+                  </td>
+                  <td className="py-3 px-4 text-secondary font-medium">
+                    {transaction.amount}
+                  </td>
+                  <td className="py-3 px-4">
+                    {transaction.date}
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
+                      {transaction.status}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <button className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                      <MoreHorizontal className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-500">
+                  No transaction records available.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

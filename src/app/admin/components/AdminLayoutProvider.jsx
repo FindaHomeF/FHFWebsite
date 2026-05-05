@@ -15,10 +15,10 @@ const AdminLayoutProvider = ({ children }) => {
     const pathSegments = pathname.split('/').filter(segment => segment)
     
     if (pathSegments.length === 1 && pathSegments[0] === 'admin') {
-      return ['Dashboards', 'Home']
+      return ['Home']
     }
     
-    const breadcrumbs = ['Dashboards']
+    const breadcrumbs = []
     
     if (pathSegments.includes('properties')) {
       breadcrumbs.push('Properties')

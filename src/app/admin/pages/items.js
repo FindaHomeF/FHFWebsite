@@ -626,6 +626,7 @@ export default function ItemsPage() {
           getRowActions={getRowActions}
           bulkActions={['approve', 'reject', 'delete', 'export']}
           onBulkAction={handleBulkAction}
+          emptyMessage="No item listings match your current filters."
         />
       </div>
     </div>

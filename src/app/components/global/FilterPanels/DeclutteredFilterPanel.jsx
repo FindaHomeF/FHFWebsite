@@ -4,6 +4,8 @@ import { declutteringCategories } from "@/lib/mockData";
 
 const DeclutteredFilterPanel = ({ 
   filters, 
+  scope = 'all',
+  onScopeChange,
   onFilterChange, 
   onApplyFilters,
   onClearFilters,
@@ -19,6 +21,32 @@ const DeclutteredFilterPanel = ({
 
   return (
     <div className="space-y-8 p-4 max-lg:max-h-[70vh] overflow-y-auto">
+      {typeof onScopeChange === 'function' ? (
+        <div>
+          <h3 className="font-bold mb-4">Listing Scope</h3>
+          <div className="inline-flex rounded-full border border-black10 p-1 bg-white">
+            <Button
+              type="button"
+              variant={scope === 'all' ? 'default' : 'outline'}
+              className="rounded-full text-xs h-8"
+              size="sm"
+              onClick={() => onScopeChange('all')}
+            >
+              All Listings
+            </Button>
+            <Button
+              type="button"
+              variant={scope === 'my' ? 'default' : 'outline'}
+              className="rounded-full text-xs h-8"
+              size="sm"
+              onClick={() => onScopeChange('my')}
+            >
+              My Listings
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       {/* Price Range */}
       <div>
         <h3 className="font-bold mb-4">Price Range</h3>

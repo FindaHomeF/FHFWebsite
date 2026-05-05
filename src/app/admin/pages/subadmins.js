@@ -444,6 +444,7 @@ const SubAdminsPage = () => {
             </Badge>
           )
         }}
+        emptyMessage="No sub-admin records match your current filters."
       />
     </div>
   )

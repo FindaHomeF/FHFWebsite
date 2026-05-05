@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Download, FileSpreadsheet, CheckCircle, XCircle, Ban, Mail, Phone, MapPin, Calendar, User, Shield, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Download, FileSpreadsheet, CheckCircle, XCircle, Ban, LockOpen, Mail, Phone, MapPin, Calendar, User, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { validateStudentId } from '@/lib/studentIdValidation';
 import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
+import { useUnlockLockedUserAccount } from '@/lib/mutations'
 
 const UserDetailsPage = ({ userId }) => {
   const router = useRouter();
@@ -36,6 +37,31 @@ const UserDetailsPage = ({ userId }) => {
   const [user, setUser] = useState(defaultUser);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { mutateAsync: unlockLockedUserAccount, isPending: isUnlockingAccount } = useUnlockLockedUserAccount()
+
+  const currentUser = typeof window !== 'undefined'
+    ? JSON.parse(localStorage.getItem('currentUser') || 'null')
+    : null
+
+  const hasUnlockPermission = Boolean(
+    currentUser &&
+    (
+      currentUser?.role === 'admin' ||
+      currentUser?.role === 'support' ||
+      currentUser?.role === 'subadmin' ||
+      currentUser?.isSubAdmin === true ||
+      currentUser?.is_sub_admin === true
+    )
+  )
+
+  const isAccountLocked = Boolean(
+    user?.is_locked ||
+    user?.isLocked ||
+    user?.locked_until ||
+    user?.lockedUntil ||
+    Number(user?.failed_login_attempts || 0) >= 5 ||
+    Number(user?.failed_otp_attempts || 0) >= 5
+  )
 
   // Load user data from localStorage
   useEffect(() => {
@@ -328,6 +354,35 @@ const UserDetailsPage = ({ userId }) => {
     }
   };
 
+  const handleUnlockAccount = async () => {
+    const accessToken =
+      localStorage.getItem('fhf-access-token') || localStorage.getItem('access_token')
+    if (!accessToken) {
+      toast.error('Session expired. Please log in again.')
+      return
+    }
+
+    try {
+      await unlockLockedUserAccount({
+        userId: user.id,
+        accessToken,
+      })
+
+      const unlockedUser = {
+        ...user,
+        is_locked: false,
+        isLocked: false,
+        locked_until: null,
+        lockedUntil: null,
+        failed_login_attempts: 0,
+        failed_otp_attempts: 0,
+      }
+      setUser(unlockedUser)
+    } catch {
+      // Error toast handled by mutation.
+    }
+  }
+
   return (
     <div className="space-y-6 pb-12">
       <div className="bg-white rounded-lg shadow-sm max-h-screen">
@@ -387,6 +442,17 @@ const UserDetailsPage = ({ userId }) => {
                   Activate Account
                 </Button>
               </>
+            )}
+
+            {hasUnlockPermission && isAccountLocked && (
+              <Button
+                onClick={handleUnlockAccount}
+                disabled={isUnlockingAccount}
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-4 py-2"
+              >
+                <LockOpen className="w-4 h-4" />
+                {isUnlockingAccount ? 'Unlocking...' : 'Unlock Account'}
+              </Button>
             )}
           </div>
         </div>

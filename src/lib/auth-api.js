@@ -28,7 +28,7 @@ export const getStoredRefreshToken = () => {
   return localStorage.getItem('fhf-refresh-token') || localStorage.getItem('refresh_token')
 }
 
-class ApiRequestError extends Error {
+export class ApiRequestError extends Error {
   constructor(message, status, meta = {}) {
     super(message)
     this.name = 'ApiRequestError'
@@ -37,22 +37,85 @@ class ApiRequestError extends Error {
   }
 }
 
+/** True when API rejected login because the account email is not verified yet (OTP flow). */
+export const isEmailUnverifiedAuthError = (error) =>
+  Boolean(error?.meta?.emailUnverified)
+
+/**
+ * Collects human-readable strings from nested API error payloads.
+ * Supports `{ error: { message, details: { email: [], student_id_number: [] } } }` and legacy shapes.
+ */
 const parseApiError = async (response) => {
   try {
     const errorData = await response.json()
+
+    const envelope = errorData?.error
+    if (envelope && typeof envelope === 'object') {
+      const details =
+        envelope.details && typeof envelope.details === 'object' ? envelope.details : {}
+
+      const fieldParts = []
+      const detailKeys = [
+        'email',
+        'student_id_number',
+        'artisan_nin',
+        'phone_number',
+        'password',
+        'non_field_errors',
+      ]
+
+      for (const key of detailKeys) {
+        const arr = details[key]
+        if (Array.isArray(arr)) {
+          arr.forEach((item) => {
+            if (typeof item === 'string' && item.trim()) fieldParts.push(item.trim())
+          })
+        }
+      }
+
+      if (Array.isArray(details.detail)) {
+        details.detail.forEach((item) => {
+          if (typeof item === 'string' && item.trim()) fieldParts.push(item.trim())
+        })
+      }
+
+      let message =
+        typeof envelope.message === 'string' && envelope.message.trim()
+          ? envelope.message.trim()
+          : 'Request failed. Please try again.'
+
+      // Prefer combined field messages when multiple conflicts (e.g. duplicate email + student ID).
+      if (fieldParts.length > 0) {
+        message = fieldParts.join(' ')
+      }
+
+      const emailUnverified = /verify your email|email not verified|please verify your email/i.test(
+        message
+      )
+
+      return {
+        message,
+        meta: {
+          code: envelope.code,
+          details,
+          emailUnverified,
+        },
+      }
+    }
+
     const firstError = Object.values(errorData || {})[0]
     if (Array.isArray(firstError) && firstError.length > 0) {
-      return firstError[0]
+      return { message: firstError[0], meta: {} }
     }
     if (typeof firstError === 'string') {
-      return firstError
+      return { message: firstError, meta: {} }
     }
     if (typeof errorData?.detail === 'string') {
-      return errorData.detail
+      return { message: errorData.detail, meta: {} }
     }
-    return 'Request failed. Please try again.'
+    return { message: 'Request failed. Please try again.', meta: {} }
   } catch {
-    return 'Request failed. Please try again.'
+    return { message: 'Request failed. Please try again.', meta: {} }
   }
 }
 
@@ -108,12 +171,13 @@ const request = async (path, options = {}) => {
   }
 
   if (!response.ok) {
-    const errorMessage = await parseApiError(response)
+    const { message: errorMessage, meta: errorMeta } = await parseApiError(response)
     if (response.status === 401 && canAttemptRefresh) {
       clearAuthStorage()
     }
     throw new ApiRequestError(errorMessage, response.status, {
       retryAfter: response.headers.get('retry-after'),
+      ...errorMeta,
     })
   }
 
@@ -314,6 +378,28 @@ export const uploadStudentIdDocument = async (
       Authorization: `Bearer ${accessToken}`,
     },
     body: formData,
+  })
+}
+
+export const unlockLockedUserAccount = async (
+  { userId },
+  accessToken = getStoredAccessToken()
+) => {
+  if (!accessToken) {
+    throw new ApiRequestError('Authentication required', 401)
+  }
+  if (!userId) {
+    throw new ApiRequestError('user_id is required to unlock account', 400)
+  }
+
+  return request('/api/auth/unlock-account/', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      user_id: userId,
+    }),
   })
 }
 

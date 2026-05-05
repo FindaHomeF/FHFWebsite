@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react'
 import { Mail, CheckCircle2, Clock, AlertCircle, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Header from '@/app/components/global/Header'
 import Footer from '@/app/components/global/Footer'
 import { toast } from 'sonner'
 
 const VerifyEmailPage = () => {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('pending') // 'pending', 'verified', 'expired'
   const [countdown, setCountdown] = useState(0)
@@ -28,6 +30,12 @@ const VerifyEmailPage = () => {
       return () => clearTimeout(timer)
     }
   }, [countdown])
+
+  useEffect(() => {
+    if (status !== 'verified') return
+    toast.success('Email confirmed. Please login with your details.')
+    router.replace('/auth')
+  }, [status, router])
 
   const handleResend = () => {
     setCountdown(60)

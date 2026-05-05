@@ -129,7 +129,7 @@ const ResetPasswordForm = () => {
                       message: 'Enter a valid email address',
                     },
                   })}
-                  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 ${errors.email ? 'border-red-500' : ''}`}
+                  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3 ${errors.email ? 'border-red-500' : ''}`}
                   placeholder='example@email.com'
                 />
                 <p className='text-red-500 text-xs pt-1'>{errors.email?.message}</p>
@@ -163,7 +163,7 @@ const ResetPasswordForm = () => {
                       { shouldValidate: true }
                     )
                   }
-                  className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 tracking-[0.25em] text-center ${errors.otpCode ? 'border-red-500' : ''}`}
+                  className={`rounded-md border border-black10 w-full h-[2.8rem] px-3 tracking-[0.25em] text-center ${errors.otpCode ? 'border-red-500' : ''}`}
                   placeholder='A1B2C3D4'
                 />
                 <p className='text-red-500 text-xs pt-1'>{errors.otpCode?.message}</p>
@@ -189,7 +189,7 @@ const ResetPasswordForm = () => {
                         message: 'Use 8+ chars with upper, lower, number, and special char',
                       },
                     })}
-                    className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 ${errors.newPassword ? 'border-red-500' : ''}`}
+                    className={`rounded-md border border-black10 w-full h-[2.8rem] px-3 ${errors.newPassword ? 'border-red-500' : ''}`}
                     placeholder='*******'
                   />
                   <button
@@ -213,7 +213,7 @@ const ResetPasswordForm = () => {
                       required: 'Confirm your new password',
                       validate: (value) => value === newPassword || 'Passwords do not match',
                     })}
-                    className={`rounded-md border border-black/40 w-full h-[2.8rem] px-3 ${errors.confirmNewPassword ? 'border-red-500' : ''}`}
+                    className={`rounded-md border border-black10 w-full h-[2.8rem] px-3 ${errors.confirmNewPassword ? 'border-red-500' : ''}`}
                     placeholder='*******'
                   />
                   <button

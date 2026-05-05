@@ -10,6 +10,7 @@ const ApartmentsGrid = ({
   items, 
   itemsPerPage = 12, 
   title = "All Apartments",
+  showTitle = true,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,9 +77,13 @@ const ApartmentsGrid = ({
       
       <div className="w-[90%] md:w-5/6 mx-auto mt-6 md:mt-10 mb-10 md:mb-16">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold">
-            {title}
-          </h2>
+          {showTitle ? (
+            <h2 className="text-2xl md:text-3xl font-bold">
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
           <p className="text-gray-600">
             Showing {filteredItems.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredItems.length)} of {filteredItems.length} properties
           </p>

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { useResendEmailOtp, useVerifyEmailOtp } from '@/lib/mutations'
+import { toast } from 'sonner'
 
 const Logo = '/Logo/Logosvg.svg'
 
@@ -59,7 +60,11 @@ const EmailOtpForm = () => {
         email: email.trim().toLowerCase(),
         otpCode: normalizedOtp,
       })
-      router.push('/auth/verify-email/success')
+      toast.success('Email confirmed. Please login with your details.')
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('fhf-signup-role')
+      }
+      router.replace('/auth')
     } catch {
       // Handled with mutation onError toast.
     }
@@ -124,7 +129,7 @@ const EmailOtpForm = () => {
                         .replace(/[^A-Z0-9]/g, '')
                     )
                   }
-                  className='rounded-md border border-black/40 w-full h-[2.8rem] px-3 tracking-[0.3em] text-center text-lg'
+                  className='rounded-md border border-black10 w-full h-[2.8rem] px-3 tracking-[0.3em] text-center text-lg'
                   placeholder='A1B2C3D4'
                 />
                 <p className='text-xs text-black/50 pt-2'>

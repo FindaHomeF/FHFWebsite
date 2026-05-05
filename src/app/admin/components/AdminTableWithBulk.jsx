@@ -117,6 +117,7 @@ const AdminTableWithBulk = ({
   onBulkAction,
   /** When set, ⋯ opens a table-safe menu. Return `[{ id, label, icon?, onClick, destructive? }]` per row. */
   getRowActions,
+  emptyMessage = 'No records available.',
 }) => {
   const [selectedItems, setSelectedItems] = useState([])
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
@@ -134,6 +135,7 @@ const AdminTableWithBulk = ({
       [],
     [paginationData, data]
   )
+  const hasItems = currentItems.length > 0
 
   const toggleItem = (itemId) => {
     setSelectedItems(prev => 
@@ -311,30 +313,46 @@ const AdminTableWithBulk = ({
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((item, index) => {
-                const itemId = item.id || item._id
-                return (
-                  <AdminBulkTableRow
-                    key={`${itemId}-${currentPage}-${index}`}
-                    item={item}
-                    index={index}
-                    columns={columns}
-                    getStatusBadge={getStatusBadge}
-                    onRowClick={onRowClick}
-                    actionsColumn={actionsColumn}
-                    getRowActions={getRowActions}
-                    isSelected={selectedItems.includes(itemId)}
-                    onToggleRow={toggleItem}
-                  />
-                )
-              })}
+              {hasItems ? (
+                currentItems.map((item, index) => {
+                  const itemId = item.id || item._id
+                  return (
+                    <AdminBulkTableRow
+                      key={`${itemId}-${currentPage}-${index}`}
+                      item={item}
+                      index={index}
+                      columns={columns}
+                      getStatusBadge={getStatusBadge}
+                      onRowClick={onRowClick}
+                      actionsColumn={actionsColumn}
+                      getRowActions={getRowActions}
+                      isSelected={selectedItems.includes(itemId)}
+                      onToggleRow={toggleItem}
+                    />
+                  )
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={columns.length + (actionsColumn ? 2 : 1)}
+                    className="px-6 py-10 text-center text-sm text-gray-500"
+                  >
+                    {emptyMessage}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
       <p className="text-xs text-black66 py-3 text-right px-6">
-        Showing {paginationData.startIndex + 1}-{Math.min(paginationData.endIndex, paginationData.totalItems)} of {paginationData.totalItems} items
+        {hasItems
+          ? `Showing ${(paginationData?.startIndex ?? 0) + 1}-${Math.min(
+              paginationData?.endIndex ?? currentItems.length,
+              paginationData?.totalItems ?? currentItems.length
+            )} of ${paginationData?.totalItems ?? currentItems.length} items`
+          : 'Showing 0 of 0 items'}
       </p>
 
       {/* Pagination */}

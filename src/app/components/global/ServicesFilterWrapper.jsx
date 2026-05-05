@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useMediaQuery } from '@/app/hooks/use-media-query';
 
-const ServicesFilterWrapper = ({ items }) => {
+const ServicesFilterWrapper = ({ items, scope = 'all', onScopeChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSort] = useState("popularity");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -132,6 +132,8 @@ const ServicesFilterWrapper = ({ items }) => {
   const FilterPanelComponent = () => (
     <ServicesFilterPanel
       filters={panelFilters}
+      scope={scope}
+      onScopeChange={onScopeChange}
       onFilterChange={handleFilterChange}
       onApplyFilters={handleApplyFilters}
       onClearFilters={handleClearFilters}
@@ -211,7 +213,7 @@ const ServicesFilterWrapper = ({ items }) => {
       <ServicesGrid 
         items={filteredAndSortedItems}
         itemsPerPage={12}
-        title="All Service Providers"
+        title={scope === 'my' ? 'My Services' : 'All Services'}
       />
     </>
   );

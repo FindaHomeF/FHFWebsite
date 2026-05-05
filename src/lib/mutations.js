@@ -4,7 +4,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { saveToStorage } from './query-options'
 import { toast } from 'sonner'
-import { changePassword, clearAuthStorage, createDeclutteringListing, deleteDeclutteringListing, loginUser, logoutUser, partiallyUpdateDeclutteringListing, persistAuthSession, persistRefreshedAuthTokens, refreshAuthToken, registerUser, reorderDeclutteringListingImages, requestPasswordReset, resendEmailOtp, resetPasswordWithOtp, restoreDeclutteringListing, softDeleteDeclutteringListing, updateCurrentUserProfile, updateDeclutteringListing, uploadStudentIdDocument, verifyEmailOtp } from './auth-api'
+import { changePassword, clearAuthStorage, createDeclutteringListing, deleteDeclutteringListing, isEmailUnverifiedAuthError, loginUser, logoutUser, partiallyUpdateDeclutteringListing, persistAuthSession, persistRefreshedAuthTokens, refreshAuthToken, registerUser, reorderDeclutteringListingImages, requestPasswordReset, resendEmailOtp, resetPasswordWithOtp, restoreDeclutteringListing, softDeleteDeclutteringListing, unlockLockedUserAccount, updateCurrentUserProfile, updateDeclutteringListing, uploadStudentIdDocument, verifyEmailOtp } from './auth-api'
 
 // Auth mutations
 export const useRegisterUser = () => {
@@ -72,6 +72,10 @@ export const useLoginUser = () => {
       toast.success('Login successful')
     },
     onError: (error) => {
+      if (isEmailUnverifiedAuthError(error)) {
+        // Login page resends OTP and redirects to verify-otp; avoid duplicate error toast.
+        return
+      }
       toast.error(error?.message || 'Login failed')
       console.error('Error during login:', error)
     },
@@ -162,6 +166,23 @@ export const useUploadStudentIdDocument = () => {
       }
       toast.error(error?.message || 'Unable to upload Student ID document')
       console.error('Error uploading Student ID document:', error)
+    },
+  })
+}
+
+export const useUnlockLockedUserAccount = () => {
+  return useMutation({
+    mutationFn: ({ userId, accessToken }) =>
+      unlockLockedUserAccount({ userId }, accessToken),
+    onSuccess: () => {
+      toast.success('Account unlocked successfully')
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        clearAuthStorage()
+      }
+      toast.error(error?.message || 'Unable to unlock account')
+      console.error('Error unlocking account:', error)
     },
   })
 }

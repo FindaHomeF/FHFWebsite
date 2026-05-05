@@ -4,6 +4,8 @@ import { serviceCategories } from "@/lib/mockData";
 
 const ServicesFilterPanel = ({ 
   filters, 
+  scope = 'all',
+  onScopeChange,
   onFilterChange, 
   onApplyFilters,
   onClearFilters,
@@ -19,6 +21,29 @@ const ServicesFilterPanel = ({
 
   return (
     <div className="space-y-8 p-4 max-lg:max-h-[70vh] overflow-y-auto">
+      {/* Listing Scope */}
+      <div>
+        <h3 className="font-bold mb-4">Listing Scope</h3>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={scope === 'all' ? 'default' : 'outline'}
+            onClick={() => onScopeChange?.('all')}
+            className="rounded-full text-xs h-8"
+            size="sm"
+          >
+            All Listings
+          </Button>
+          <Button
+            variant={scope === 'my' ? 'default' : 'outline'}
+            onClick={() => onScopeChange?.('my')}
+            className="rounded-full text-xs h-8"
+            size="sm"
+          >
+            My Listings
+          </Button>
+        </div>
+      </div>
+
       {/* Price Range */}
       <div>
         <h3 className="font-bold mb-4">Service Cost</h3>

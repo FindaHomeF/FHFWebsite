@@ -11,9 +11,11 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { Building2 } from 'lucide-react'
 import ConfirmActionDialog from '@/components/ui/confirm-action-dialog'
+import { useStudent } from '../context/StudentContext'
 
 export default function StudentPropertiesPage() {
   const router = useRouter()
+  const { canManageListings } = useStudent()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [properties, setProperties] = useState([])
@@ -67,6 +69,21 @@ export default function StudentPropertiesPage() {
 
   return (
     <div className="space-y-6 px-6 pb-12">
+      {!canManageListings ? (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-8 text-center">
+          <Building2 className="w-16 h-16 text-orange-600 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-orange-900 mb-3">Access Restricted</h2>
+          <p className="text-orange-700 mb-4">
+            Please complete your profile and verify your Student ID to access properties.
+          </p>
+          <Link href="/student/profile">
+            <Button className="bg-orange-600 hover:bg-orange-700">
+              Go to Profile
+            </Button>
+          </Link>
+        </div>
+      ) : (
+        <>
       <div className="bg-white py-6">
         <div className='flex-itc-jub'>
           <div className="flex-shrink-0">
@@ -195,6 +212,8 @@ export default function StudentPropertiesPage() {
         confirmText='Delete property'
         onConfirm={handleConfirmDelete}
       />
+        </>
+      )}
     </div>
   )
 }

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useMediaQuery } from '@/app/hooks/use-media-query';
 
-const ApartmentsFilterWrapper = ({ items }) => {
+const ApartmentsFilterWrapper = ({ items, scope = 'all', onScopeChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSort] = useState("popularity");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -137,6 +137,8 @@ const ApartmentsFilterWrapper = ({ items }) => {
   const FilterPanelComponent = () => (
     <ApartmentsFilterPanel
       filters={panelFilters}
+      scope={scope}
+      onScopeChange={onScopeChange}
       onFilterChange={handleFilterChange}
       onApplyFilters={handleApplyFilters}
       onClearFilters={handleClearFilters}
@@ -216,7 +218,7 @@ const ApartmentsFilterWrapper = ({ items }) => {
       <ApartmentsGrid 
         items={filteredAndSortedItems}
         itemsPerPage={12}
-        title="All Apartments"
+        title={scope === 'my' ? 'My Properties' : 'All Apartments'}
       />
     </>
   );

@@ -14,10 +14,10 @@ const AgentLayoutProvider = ({ children }) => {
     const pathSegments = pathname.split('/').filter(segment => segment)
     
     if (pathSegments.length === 1 && pathSegments[0] === 'agent') {
-      return ['Agent Dashboard', 'Home']
+      return ['Home']
     }
     
-    const breadcrumbs = ['Agent Dashboard']
+    const breadcrumbs = []
     
     if (pathSegments.includes('properties')) {
       breadcrumbs.push('Properties')
@@ -37,8 +37,12 @@ const AgentLayoutProvider = ({ children }) => {
       } else if (pathSegments.length > 2 && pathSegments[1] === 'items' && pathSegments[2] !== 'add') {
         breadcrumbs.push('Item Details')
       }
+    } else if (pathSegments.includes('bookings')) {
+      breadcrumbs.push('Bookings')
     } else if (pathSegments.includes('payments')) {
       breadcrumbs.push('Payments & Escrow')
+    } else if (pathSegments.includes('public-profile')) {
+      breadcrumbs.push('Public Profile View')
     } else if (pathSegments.includes('profile')) {
       breadcrumbs.push('Profile')
     } else {

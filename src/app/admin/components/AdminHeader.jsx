@@ -1,10 +1,10 @@
 'use client';
-import { useState } from 'react';
-import { Menu, Bell, Search, HelpCircle, ChevronDown } from 'lucide-react';
+import { Menu, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NotificationCenter from '../components/NotificationCenter';
+import DashboardProfileMenu from '@/app/components/global/DashboardProfileMenu';
 
-export default function AdminHeader({ onMenuClick, breadcrumbs = ['Dashboards', 'Home'] }) {
+export default function AdminHeader({ onMenuClick, breadcrumbs = ['Home'] }) {
   return (
     <header className="bg-gray-100 border-b border-black10">
       <div className="flex items-center justify-between h-16 md:px-6">
@@ -52,12 +52,12 @@ export default function AdminHeader({ onMenuClick, breadcrumbs = ['Dashboards', 
             <Button variant="ghost" size="sm" className="text-tertiary hover:text-gray-800">
               <HelpCircle className="w-6 h-6 " />
             </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                <span className="text-tertiary text-sm font-medium">A</span>
-            </div>
-              <ChevronDown className="w-4 h-4 text-tertiary" />
-            </div>
+            <DashboardProfileMenu
+              profileLabel="Admin profile"
+              initial="A"
+              profileHref="/admin/settings"
+              messagesHref="/messages"
+            />
           </div>
         </div>
       </div>

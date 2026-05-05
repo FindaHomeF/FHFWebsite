@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Calendar, Clock, MapPin, Phone, X, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -67,6 +68,7 @@ const roleCopy = {
 }
 
 export default function BookingsDashboard({ role = 'student' }) {
+  const router = useRouter()
   const copy = roleCopy[role] || roleCopy.student
   const [bookings, setBookings] = useState(mockBookings)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
@@ -82,8 +84,18 @@ export default function BookingsDashboard({ role = 'student' }) {
     setSelectedBooking(null)
   }
 
-  const handleReschedule = (bookingId) => {
-    toast.info('Reschedule feature coming soon')
+  const handleReschedule = (booking) => {
+    const query = new URLSearchParams({
+      reschedule: '1',
+      bookingId: booking.id,
+      participant: booking.providerName,
+      serviceName: booking.serviceName,
+      date: booking.date,
+      time: booking.time,
+      duration: booking.duration,
+      location: booking.address,
+    })
+    router.push(`/messages?${query.toString()}`)
   }
 
   const BookingCard = ({ booking, isUpcoming }) => (
@@ -146,7 +158,7 @@ export default function BookingsDashboard({ role = 'student' }) {
               variant="outline"
               size="sm"
               type="button"
-              onClick={() => handleReschedule(booking.id)}
+              onClick={() => handleReschedule(booking)}
               className="flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />

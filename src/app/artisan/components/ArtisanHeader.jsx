@@ -1,10 +1,10 @@
 'use client';
-import { useState } from 'react';
-import { Menu, Bell, Search, HelpCircle, ChevronDown } from 'lucide-react';
+import { Menu, Search, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserNotificationCenter from '@/app/components/global/UserNotificationCenter';
+import DashboardProfileMenu from '@/app/components/global/DashboardProfileMenu';
 
-export default function ArtisanHeader({ onMenuClick, breadcrumbs = ['Artisan Dashboard', 'Home'] }) {
+export default function ArtisanHeader({ onMenuClick, breadcrumbs = ['Home'] }) {
   return (
     <header className="bg-gray-100 border-b border-black10">
       <div className="flex items-center justify-between h-16 px-6">
@@ -47,12 +47,13 @@ export default function ArtisanHeader({ onMenuClick, breadcrumbs = ['Artisan Das
             <Button variant="ghost" size="sm" className="text-tertiary hover:text-gray-800">
               <HelpCircle className="w-6 h-6" />
             </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                <span className="text-tertiary text-sm font-medium">A</span>
-              </div>
-              <ChevronDown className="w-4 h-4 text-tertiary" />
-            </div>
+            <DashboardProfileMenu
+              profileLabel="Artisan profile"
+              initial="A"
+              profileHref="/artisan/profile"
+              messagesHref="/messages"
+              publicProfileHref="/artisan/public-profile"
+            />
           </div>
         </div>
       </div>
